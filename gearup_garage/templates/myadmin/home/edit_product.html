@@ -1,0 +1,90 @@
+{% extends 'myadmin/layouts/base.html' %}
+{% load static %}
+{% block title %} Profile {% endblock title %}
+
+{% block content %}
+
+<div class="col-xl-8 order-xl-1">
+    <div class="card">
+        <div class="card-header">
+            <div class="row align-items-center">
+                <div class="col-8">
+                    <h3 class="mb-0">Edit Product</h3>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+          <img src="{{ instance.images }}" class="img-fluid mb-4" alt="Product Image">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <h6 class="heading-small text-muted mb-4">  information</h6>
+                <div class="pl-lg-4">
+                    <div class="row">
+                        <!-- Product Name -->
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="input-product-name">Product Name</label>
+                                <input type="text" id="input-product-name" class="form-control" placeholder="Product name" value="{{ instance.product_name }}" name="product_name" required>
+                            </div>
+                        </div>
+                        <!-- Price -->
+                        <div class="col-lg-3">
+                            <div class="form-group">
+                                <label for="input-price">Price</label>
+                                <input type="number" id="input-price" class="form-control" placeholder="Price" value="{{ instance.price }}" name="price" required>
+                            </div>
+                        </div>
+                        <div class="col-lg-3">
+                            <div class="form-group">
+                                <label for="input-price">Stock</label>
+                                <input type="number" id="input-price" class="form-control" placeholder="stock" value="{{ instance.stock }}" name="stock" required>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Description -->
+                    <div class="col-lg-12">
+                        <div class="form-group">
+                            <label class="form-control-label">Description</label>
+                            <textarea rows="4" class="form-control" placeholder="Description" name="description">{{ instance.description }}</textarea>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                      <div class="form-group">
+                          <label class="form-control-label">Update Image</label>
+                          <!-- Display current image name -->
+                          {% if instance.images %}
+                              <p>{{ instance.images.name }}</p>
+                          {% else %}
+                              <!-- Display placeholder if no image exists -->
+                              <span>No image available</span>
+                          {% endif %}
+                          <input type="file" class="form-control-file" name="image">
+                      </div>
+                  </div>
+                  <select class="form-control" name="category_dropdown" value={{instance.category.category_name}}>
+                <option   >{{instance.category.category_name}}</option>
+                    {% for category in category_instance %}
+                    <option value={{category.id}}>{{category.category_name}}</option>
+                    {% endfor %}
+                   
+                    <!-- Add more options as needed --> 
+                </select>
+                  </div>
+                    <hr class="my-4" />
+                    <!-- Update Button -->
+                    <div class="col-4 text-center">
+                        <button type="submit" class="btn btn-sm btn-success btn-block">Update</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% include "includes/footer.html" %}
+
+{% endblock content %}
+
+<!-- Specific JS goes HERE -->
+{% block javascripts %}
+{% endblock javascripts %}

@@ -66,8 +66,12 @@ def login(request):
         password = request.POST['password']
         user = auth.authenticate(email=email, password=password)
         if user is not None:
-            auth.login(request, user)
-            return redirect('home')
+            if user.is_admin:   
+                auth.login(request, user)
+                return redirect('admin_dash')
+            else:
+                auth.login(request, user)
+                return redirect('home')
         else:
             messages.error(request, "Invalid credentials")
             return redirect("login")
