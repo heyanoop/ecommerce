@@ -61,19 +61,23 @@
                           <input type="file" class="form-control-file" name="image">
                       </div>
                   </div>
-                  <select class="form-control" name="category_dropdown" value={{instance.category.category_name}}>
-                <option   >{{instance.category.category_name}}</option>
+                  <select class="form-control" name="category_dropdown" >
+                <option  >select Category</option>
                     {% for category in category_instance %}
-                    <option value={{category.id}}>{{category.category_name}}</option>
+                    <option value='{{category.id}}'>{{category}}</option>
                     {% endfor %}
                    
                     <!-- Add more options as needed --> 
                 </select>
                   </div>
                     <hr class="my-4" />
-                    <!-- Update Button -->
-                    <div class="col-4 text-center">
-                        <button type="submit" class="btn btn-sm btn-success btn-block">Update</button>
+                    <div class="row">
+                        <div class="col-6 text-center">
+                            <button type="submit" class="btn btn-sm btn-success btn-block">Update</button>
+                        </div>
+                        <div class="col-6 text-center">
+                            <a href="{% url 'delete_product' product_id=instance.id %}" class="btn btn-sm btn-danger btn-block">Delete</a>
+                        </div>
                     </div>
                 </div>
             </form>

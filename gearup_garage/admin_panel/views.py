@@ -8,7 +8,13 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 from django.utils.text import slugify
 
-
+def admin_required(view_func):
+    def _wrapped_view_func(request, *args, **kwargs):
+        if not request.user.is_admin:
+            messages.error(request, "You are not authorized to perform this action.")
+            return redirect('login')
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view_func
 
 # Create your views here.
 @login_required
@@ -18,11 +24,13 @@ def admin_login(request):
 
 @login_required
 @never_cache
+@admin_required
 def admin_dashboard(request):
     return render(request, 'myadmin/home/index.html')
 
 @login_required
 @never_cache
+@admin_required
 def user_list(request):
     user_data = account.objects.all()
     context = {
@@ -33,6 +41,7 @@ def user_list(request):
 
 @login_required
 @never_cache
+@admin_required
 def product_list(request):
     product_data = product.objects.all()
     context = {
@@ -41,6 +50,7 @@ def product_list(request):
     return render(request, 'myadmin/home/product.html', context)
 
 @login_required
+@admin_required
 def category_list(request):
     category_data = category.objects.all()
     context = {
@@ -50,11 +60,8 @@ def category_list(request):
 
 @login_required
 @never_cache
+@admin_required
 def user_edit(request, user_id):
-    if not request.user.is_admin:
-        messages.error(request, "You are not authorized to perform this action.")
-        return redirect('user_list')
-    
     instance = account.objects.get(id=user_id)
     if request.method == 'POST':
         first_name = request.POST.get('first_name')
@@ -86,6 +93,7 @@ def user_edit(request, user_id):
 
 @login_required
 @never_cache
+@admin_required
 def edit_product(request, product_id):
     instance = product.objects.get(id=product_id)
     category_instance = category.objects.all()
@@ -93,15 +101,17 @@ def edit_product(request, product_id):
         product_name = request.POST.get('product_name')
         description = request.POST.get('description')
         price = request.POST.get('price')
-        image = request.FILES.get('images')
+        image = request.FILES.get('image')
         category_list = request.POST.get('category_dropdown')
         stock = request.POST.get('stock')
+        
+        category_inst = category.objects.get(id=category_list)
 
         # Update the instance with the new data
         instance.product_name = product_name
         instance.description = description
         instance.price = price
-        instance.category.category_name = category_list
+        instance.category = category_inst
         instance.stock  = stock
         if image:
             instance.images = image
@@ -118,11 +128,8 @@ def edit_product(request, product_id):
 
 @login_required
 @never_cache
+@admin_required
 def edit_category(request, category_id):
-    if not request.user.is_superadmin:
-        messages.error(request, "You are not authorized to perform this action.")
-        return redirect('category_list')
-    
     category_instance = category.objects.get(id=category_id)
     if request.method == 'POST':
         category_name = request.POST.get('category_name')
@@ -130,6 +137,7 @@ def edit_category(request, category_id):
         
         category_instance.description = description
         category_instance.category_name = category_name
+        category_instance.slug = slugify(category_name)
         category_instance.save()
         return redirect ('category_list') 
     
@@ -139,6 +147,8 @@ def edit_category(request, category_id):
     
     return render(request, 'myadmin/home/edit_category.html', context)
 
+@login_required
+@admin_required
 def add_product(request):
     category_instance = category.objects.all()
     if request.method == 'POST':
@@ -174,6 +184,8 @@ def add_product(request):
     return render(request, 'myadmin/home/add_product.html', context)
 
 
+@login_required
+@admin_required
 def add_category(request):
     if request.method == 'POST':
         category_name = request.POST.get('category_name')
@@ -182,13 +194,16 @@ def add_category(request):
         # Create a new category instance
         new_category = category.objects.create(
             category_name=category_name,
-            description=description
+            description=description,
+            slug = slugify(category_name)
         )
 
         return redirect('category_list')
 
     return render(request, 'myadmin/home/add_category.html')
 
+@login_required
+@admin_required
 def delete_category(request, category_id):
     category_instance = get_object_or_404(category, id=category_id)
     if request.method == 'POST':
@@ -199,3 +214,45 @@ def delete_category(request, category_id):
         'category_instance': category_instance,
     }
     return render(request, 'myadmin/home/delete_category.html', context)
+
+@login_required
+@admin_required
+def add_user(request):
+    if request.method == 'POST':
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        phone_number = request.POST.get('phone_number')
+        is_admin = request.POST.get('is_admin')
+        is_staff = request.POST.get('is_staff')
+        is_active = request.POST.get('is_active')
+        is_superadmin = request.POST.get('is_superadmin')
+        
+        account.objects.create(
+            first_name=first_name,
+            last_name=last_name,
+            username=username,
+            email=email,
+            phone_number=phone_number,
+            is_admin=True if is_admin == '1' else False,
+            is_staff=True if is_staff == '1' else False,
+            is_active=True if is_active == '1' else False,
+            is_superadmin=True if is_superadmin == '1' else False
+        )
+        return redirect('user_list') 
+
+    return render(request, 'myadmin/home/add_user.html')
+
+@login_required
+@admin_required
+def delete_product(request, product_id):
+    product_instance = get_object_or_404(product, id=product_id)
+    if request.method == 'POST':
+        product_instance.delete()
+        return redirect('product_list')
+
+    context = {
+        'product_instance': product_instance,
+    }
+    return render(request, 'myadmin/home/delete_product.html', context)

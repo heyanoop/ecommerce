@@ -128,8 +128,6 @@
 
     // Image Cropper
     var $image = document.getElementById('image_preview');
-    var cropBoxData;
-    var canvasData;
     var cropper;
 
     $('#id_image').on('change', function() {
@@ -145,12 +143,11 @@
         cropper = new Cropper($image, {
             aspectRatio: 430 / 360,
             crop: function(event) {
-                cropBoxData = cropper.getCropBoxData();
-                canvasData = cropper.getCanvasData();
-                document.getElementById('id_x').value = cropBoxData.left;
-                document.getElementById('id_y').value = cropBoxData.top;
-                document.getElementById('id_width').value = cropBoxData.width;
-                document.getElementById('id_height').value = cropBoxData.height;
+                var cropData = cropper.getData();
+                document.getElementById('id_x').value = cropData.x;
+                document.getElementById('id_y').value = cropData.y;
+                document.getElementById('id_width').value = cropData.width;
+                document.getElementById('id_height').value = cropData.height;
             },
         });
     }

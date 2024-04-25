@@ -25,6 +25,7 @@ def store(request, category_slug = None):
 def product_details(request, category_slug, product_slug):
     try:
         single_product = product.objects.get(category__slug = category_slug, slug = product_slug)
+        print(single_product)
         context = {
             'single_product' : single_product
         }

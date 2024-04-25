@@ -28,6 +28,14 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div class="form-group">
+                                    <label for="input-product-name">Category Slug</label>
+                                    <input type="text" id="input-product-name" class="form-control" placeholder="Category Slug" value="{{ category.slug }}" name="category_slug" required readonly>
+                                    
+                                </div>
+                            </div>
                         <!-- Description -->
                         <div class="col-lg-12">
                             <div class="form-group">
@@ -73,6 +81,13 @@
                 }
                 form.classList.add('was-validated');
             }, false);
+
+            // Generate Slug from Category Name
+            document.getElementById('input-product-name').addEventListener('keyup', function() {
+                var categoryName = document.getElementById('input-product-name').value;
+                var slug = categoryName.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+                document.getElementById('input-product-slug').value = slug;
+            });
         }, false);
     })();
 </script>

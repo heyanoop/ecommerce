@@ -27,6 +27,13 @@
                                 <small class="text-muted">2 to 255 characters</small>
                             </div>
                         </div>
+                        <!-- Slug -->
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label for="input-slug">Slug</label>
+                                <input type="text" id="input-slug" class="form-control" placeholder="Slug" name="slug" readonly>
+                            </div>
+                        </div>
                     </div>
                     <!-- Description -->
                     <div class="col-lg-12">
@@ -52,4 +59,24 @@
 
 <!-- Specific JS goes HERE -->
 {% block javascripts %}
+<script>
+    // Slug generation
+    const titleInput = document.querySelector('#input-category-name');
+    const slugInput = document.querySelector('#input-slug');
+
+    titleInput.addEventListener('keyup', (e) => {
+        const title = e.target.value;
+        slugInput.value = slugify(title);
+    });
+
+    function slugify(text) {
+        return text.toString().toLowerCase().trim()
+            .replace(/\s+/g, '-')           // Replace spaces with -
+            .replace(/&/g, '-and-')         // Replace & with 'and'
+            .replace(/[^\w-]+/g, '')       // Remove all non-word chars
+            .replace(/--+/g, '-')          // Replace multiple - with single -
+            .replace(/^-+/, '')            // Trim - from start of text
+            .replace(/-+$/, '');           // Trim - from end of text
+    }
+</script>
 {% endblock javascripts %}
