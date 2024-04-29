@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<section class="section-content padding-y bg">
+    <div class="container">
+        <div class="row">
+            <aside class="col-lg-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title mb-4">Billing Address</h4>
+                        <!-- Existing addresses -->
+                        {% if addresses %}
+                        <form action="{% url 'checkout' %}" method="POST">
+                            {% csrf_token %}
+                            {% for address in addresses %}
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="address" id="address{{ address.id }}" value="{{ address.id }}" required>
+                                <label class="form-check-label" for="address{{ address.id }}">
+                                    {{ address.first_name }} {{ address.last_name }}, 
+                                    {{ address.address_line_1 }}, 
+                                    {% if address.address_line_2 %}{{ address.address_line_2 }}, {% endif %}
+                                    {{ address.city }}, 
+                                    {{ address.state }}, 
+                                    {{ address.country }}, 
+                                    {{ address.pincode }}
+                                    {% comment %}<a href="{% url 'remove_address' address.id %}">Remove</a>{% endcomment %}
+                                </label>
+                            </div>
+                            {% endfor %}
+                            <button type="submit" class="btn btn-primary">Use Selected Address</button>
+                        </form>
+                        <hr>
+                        {% endif %}
+                        <!-- Add new address form -->
+                        <button type="button" class="btn btn-success" data-toggle="collapse" data-target="#addAddressForm">Add New Address</button>
+                        <div id="addAddressForm" class="collapse mt-3">
+                            <form action="{% url 'add_address' %}" method="POST" onsubmit="return validateForm()">
+                                {% csrf_token %}
+                                <!-- Address form fields -->
+                                <div class="form-row">
+                                    <div class="col-md-6">
+                                        <label for="">First Name</label>
+                                        <input type="text" name="first_name" class="form-control">
+                                        <small id="first_name_error" class="text-danger"></small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="">Last Name</label>
+                                        <input type="text" name="last_name" class="form-control">
+                                        <small id="last_name_error" class="text-danger"></small>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="col-md-6">
+                                        <label for="">Email</label>
+                                        <input type="email" name="email" class="form-control">
+                                        <small id="email_error" class="text-danger"></small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="">Phone Number</label>
+                                        <input type="text" name="phone" class="form-control">
+                                        <small id="phone_error" class="text-danger"></small>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="">Address Line 1</label>
+                                    <input type="text" name="address_line_1" class="form-control">
+                                    <small id="address_line_1_error" class="text-danger"></small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="">Address Line 2</label>
+                                    <input type="text" name="address_line_2" class="form-control">
+                                </div>
+                                <div class="form-row">
+                                    <div class="col-md-4">
+                                        <label for="">Pincode</label>
+                                        <input type="text" name="pincode" class="form-control">
+                                        <small id="pincode_error" class="text-danger"></small>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="">City</label>
+                                        <input type="text" name="city" class="form-control">
+                                        <small id="city_error" class="text-danger"></small>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="">State</label>
+                                        <input type="text" name="state" class="form-control">
+                                        <small id="state_error" class="text-danger"></small>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="col-md-6">
+                                        <label for="">Country</label>
+                                        <input type="text" name="country" class="form-control">
+                                        <small id="country_error" class="text-danger"></small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="address_type">Address Type</label>
+                                        <select name="address_type" class="form-control" required>
+                                            <option value="Home">Home</option>
+                                            <option value="Office">Office</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <!-- Add other form rows as needed -->
+                                <button type="submit" class="btn btn-primary mt-3">Add Address</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Rest of your code -->
+            <aside class="col-lg-6">
+                <div class="card">
+                    <div class="card-body">
+                        <table class="table table-borderless table-shopping-cart">
+                            <thead class="text-muted">
+                                <tr class="small text-uppercase">
+                                    <th scope="col">Product</th>
+                                    <th scope="col" width="120">Quantity</th>
+                                    <th scope="col" width="120">Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in cart_item %}
+                                <tr>
+                                    <td>
+                                        <figure class="itemside align-items-center">
+                                            <div class="aside"><img src="{{item.product.images.url}}" class="img-sm" style="width: 100%;"></div>
+                                            <figcaption class="info">
+                                                <a href="" class="title text-dark">{{item.product.product_name}}</a>
+                                                <p class="text-muted small"></p>
+                                            </figcaption>
+                                        </figure>
+                                    </td>
+                                    <td> 
+                                        <!-- col.// -->
+                                        <label for="">{{item.quantity }}</label>
+                                    </td>
+                                    <td> 
+                                        <div class="price-wrap"> 
+                                            {{item.product.price}}
+                                        </div> 
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <button type="submit" name="submit" class="btn btn-primary btn-block"> Place Order </button>
+                        <a href="{% url "store" %}" class="btn btn-light btn-block">Continue Shopping</a>
+                    </div> <!-- card-body.// -->
+                </div> <!-- card.// -->
+            </aside>
+        </div> <!-- row.// -->
+    </div>
+
+{% endblock  %}
+
+<!-- Add this script at the

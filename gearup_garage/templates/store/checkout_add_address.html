@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<section class="section-content padding-y bg">
+    <div class="container">
+    
+    <!-- ============================ COMPONENT 1 ================================= -->
+    
+
+    <div class="row">
+        <aside class="col-lg-6">
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title mb-4">Billing Address</h4>
+            <form action="#" method="POST" onsubmit="return validateForm()">
+                {% csrf_token %}
+                <div class="form-row">
+                    <div class="col form-group">
+                        <label for="">First Name</label>
+                        <input type="text" name="first_name" class="form-control" >
+                        <small id="first_name_error" class="text-danger"></small>
+                    </div>
+                    <div class="col form-group">
+                        <label for="">Last Name</label>
+                        <input type="text" name="last_name" class="form-control" >
+                        <small id="last_name_error" class="text-danger"></small>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col form-group">
+                        <label for="">Email</label>
+                        <input type="email" name="email" class="form-control">
+                        <small id="email_error" class="text-danger"></small>
+                    </div>
+                    <div class="col form-group">
+                        <label for="">Phone Number</label>
+                        <input type="text" name="phone" class="form-control" >
+                        <small id="phone_error" class="text-danger"></small>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col form-group">
+                        <label for="">Address Line 1</label>
+                        <input type="text" name="address_line_1" class="form-control" >
+                        <small id="address_line_1_error" class="text-danger"></small>
+                    </div>
+                    <div class="col form-group">
+                        <label for="">Address Line 2</label>
+                        <input type="text" name="address_line_2" class="form-control">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col form-group">
+                        <label for="">Pincode</label>
+                        <input type="text" name="pincode" class="form-control">
+                        <small id="pincode_error" class="text-danger"></small>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col form-group">
+                        <label for="">City</label>
+                        <input type="text" name="city" class="form-control" >
+                        <small id="city_error" class="text-danger"></small>
+                    </div>
+                    <div class="col form-group">
+                        <label for="">State</label>
+                        <input type="text" name="state" class="form-control" >
+                        <small id="state_error" class="text-danger"></small>
+                    </div>
+                    <div class="col form-group">
+                        <label for="">Country</label>
+                        <input type="text" name="country" class="form-control" >
+                        <small id="country_error" class="text-danger"></small>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col form-group">
+                        <label for="address_type">Address Type</label>
+                        <select name="address_type" class="form-control" required>
+                            <option value="Home">Home</option>
+                            <option value="Office">Office</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col form-group">
+                        <label for="address_type">Save Address?</label>
+                        <select name="save_address" class="form-control" required>
+                            <option value="yes">Yes</option>
+                            <option value="no">No</option>
+                        </select>
+                    </div>
+                </div>
+                <dev class="form-row">
+                    <label for="">Order Note</label>
+                    <textarea name="order_note"  rows="2" class="form-control"></textarea>
+                </dev>
+            
+        </div>
+    </div> <!-- card.// -->
+    
+        </aside> <!-- col.// -->
+        <aside class="col-lg-6">
+    
+            <div class="card">
+                <div class="card-body">
+                <table class="table table-borderless table-shopping-cart">
+                    <thead class="text-muted">
+                    <tr class="small text-uppercase">
+                      <th scope="col">Product</th>
+                      <th scope="col" width="120">Quantity</th>
+                      <th scope="col" width="120">Price</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in cart_item %}
+                    <tr>
+                        <td>
+                            <figure class="itemside align-items-center">
+                                <div class="aside"><img src="{{item.product.images.url}}" class="img-sm" style="width: 100%;"></div>
+                                <figcaption class="info">
+                                    <a href="" class="title text-dark">{{item.product.product_name}}</a>
+                                    <p class="text-muted small">
+                                       
+                                    </p>
+                                </figcaption>
+                            </figure>
+                        </td>
+                        <td> 
+                            <!-- col.// -->
+                                <label for="">{{item.quantity }}</label>
+                        </td>
+                        <td> 
+                            <div class="price-wrap"> 
+                                {{item.product.price}}
+                            </div> 
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                    </table>
+                <button type="submit" name="submit" class="btn btn-primary btn-block"> Place Order </button>
+                <a href="{% url "store" %}" class="btn btn-light btn-block">Continue Shopping</a>
+            </form>
+            </div> <!-- card-body.// -->
+            </div> <!-- card.// -->
+    
+    </aside> <!-- col.// -->
+    
+    
+    </div> <!-- row.// -->
+    <!-- ============================ COMPONENT 1 END .// ================================= -->
+
+    </div> <!-- container .//  -->
+    </section>
+
+    <!-- Add this script at the end of your HTML file -->
+<script>
+    function validateForm() {
+        // Reset error messages
+        clearError('first_name_error');
+        clearError('last_name_error');
+        clearError('email_error');
+        clearError('phone_error');
+        clearError('address_line_1_error');
+        clearError('pincode_error');
+        clearError('city_error');
+        clearError('state_error');
+        clearError('country_error');
+
+        // Get input values
+        var firstName = document.getElementsByName("first_name")[0].value.trim();
+        var lastName = document.getElementsByName("last_name")[0].value.trim();
+        var email = document.getElementsByName("email")[0].value.trim();
+        var phone = document.getElementsByName("phone")[0].value.trim();
+        var addressLine1 = document.getElementsByName("address_line_1")[0].value.trim();
+        var pincode = document.getElementsByName("pincode")[0].value.trim();
+        var city = document.getElementsByName("city")[0].value.trim();
+        var state = document.getElementsByName("state")[0].value.trim();
+        var country = document.getElementsByName("country")[0].value.trim();
+
+        if (!isValidName(firstName)) {
+            showError('first_name_error', "Invalid characters in the first name.");
+            return false;
+        }
+
+        if (!isValidName(lastName)) {
+            showError('last_name_error', "Invalid characters in the last name.");
+            return false;
+        }
+        if (!isValidPhoneNumber(phone)) {
+            showError('phone_error', "Invalid phone number.");
+            return false;
+        }
+        if (!isValidPincode(pincode)) {
+            showError('pincode_error', "Invalid pincode.");
+            return false;
+        }
+        if (!isValidText(city)) {
+            showError('city_error', "City cannot contain numbers.");
+            return false;
+        }
+
+        if (!isValidText(state)) {
+            showError('state_error', "State cannot contain numbers.");
+            return false;
+        }
+
+        if (!isValidText(country)) {
+            showError('country_error', "Country cannot contain numbers.");
+            return false;
+        }
+        function isValidText(text) {
+        // Use a regular expression to check if the text contains only letters
+            return /^[a-zA-Z]+$/.test(text);
+        }
+
+        if (firstName === "" || lastName === "" || email === "" || phone === "" ||  addressLine1 === "" || pincode === "" || city === "" || state === "" || country === "" ) {
+            showError('first_name_error', "First name field cannot be empty.");
+            showError('last_name_error', "Last name cannot be empty.");
+            showError('email_error', "Email cannot be empty.");
+            showError('phone_error', "Phone number cannot be empty.");
+            showError('address_line_1_error', "Address cannot be empty.");
+            showError('pincode_error', "Pincode cannot be empty.");
+            showError('city_error', "City cannot be empty.");
+            showError('state_error', "State cannot be empty.");
+            showError('country_error', "Country cannot be empty.");
+            return false;
+        }
+
+
+        return true;
+    }
+
+    function isValidName(name) {
+        // Use a regular expression to check if the name contains only letters and spaces
+        return /^[a-zA-Z\s]+$/.test(name);
+    }
+    function isValidPhoneNumber(phone) {
+        // Use a regular expression to check if the phone number contains only digits
+        return /^\d+$/.test(phone);
+    }
+    function isValidPincode(pincode) {
+        // Use a regular expression to check if the pincode contains only digits
+        return /^\d+$/.test(pincode);
+    }
+
+    function showError(elementId, errorMessage) {
+        // Display error message below the input field
+        document.getElementById(elementId).innerHTML = errorMessage;
+    }
+
+    function clearError(elementId) {
+        // Clear error message
+        document.getElementById(elementId).innerHTML = "";
+    }
+</script>
+
+{% endblock %}

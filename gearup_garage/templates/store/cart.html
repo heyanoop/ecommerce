@@ -4,6 +4,22 @@
 <section class="section-content padding-y bg">
 <div class="container">
 
+<!-- ============================ DISPLAY MESSAGES ================================= -->
+{% if messages %}
+<div class="row">
+    <div class="col">
+        <div class="alert alert-dismissible fade show" role="alert">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+
 <!-- ============================ COMPONENT 1 ================================= -->
 
 <div class="row">
@@ -19,8 +35,9 @@
 </tr>
 </thead>
 <tbody>
+	{% for item in cart_items %}
 <tr>
-	{% for item in cart_item %}
+	
 	<td>
 		<figure class="itemside align-items-center">
 			<div class="aside"><img src="{{item.product.images.url}}" class="img-sm"></div>
@@ -37,7 +54,7 @@
 							<div class="input-group-prepend">
 							<button class="btn btn-light" type="button" id="button-plus"> <i class="fa fa-minus"></i> </button>
 							</div>
-							<input type="text" class="form-control"  value="1">
+							<input type="text" class="form-control"  value="{{item.quantity}}">
 							<div class="input-group-append">
 							<button class="btn btn-light" type="button" id="button-minus"> <i class="fa fa-plus"></i> </button>
 							</div>
@@ -51,10 +68,11 @@
 		</div> <!-- price-wrap .// -->
 	</td>
 	<td class="text-right"> 
-		<a href="" class="btn btn-danger"> Remove</a>
+		<a href=" {% url "cart_remove" product_id=item.product.id %}" class="btn btn-danger">Remove</a>
 	</td>
-	{% endfor %}
+	
 </tr>
+{% endfor %}
 </tbody>
 </table>
 </div> <!-- card.// -->
@@ -66,22 +84,22 @@
 		<div class="card-body">
 			<dl class="dlist-align">
 			  <dt>Total price:</dt>
-			  <dd class="text-right">$69.97</dd>
+			  <dd class="text-right">{{total_price}}</dd>
 			</dl>
 			<dl class="dlist-align">
 			  <dt>Tax:</dt>
-			  <dd class="text-right"> $10.00</dd>
+			  <dd class="text-right"> {{tax}}</dd>
 			</dl>
 			<dl class="dlist-align">
 			  <dt>Total:</dt>
-			  <dd class="text-right text-dark b"><strong>$59.97</strong></dd>
+			  <dd class="text-right text-dark b"><strong>{{final_price}}</strong></dd>
 			</dl>
 			<hr>
 			<p class="text-center mb-3">
 				<img src="{% static "./images/misc/payments.png" %}" height="26">
 			</p>
-			<a href="./place-order.html" class="btn btn-primary btn-block"> Checkout </a>
-			<a href="./store.html" class="btn btn-light btn-block">Continue Shopping</a>
+			<a href="{% url "checkout" %}" class="btn btn-primary btn-block"> Checkout </a>
+			<a href="{% url "store" %}" class="btn btn-light btn-block">Continue Shopping</a>
 		</div> <!-- card-body.// -->
 		</div> <!-- card.// -->
 
