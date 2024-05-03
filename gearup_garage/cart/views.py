@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from .models import Cart, Cart_items, Address
 from store.models import product
 from django.contrib import messages
-
+from django.contrib.auth.decorators import login_required
 
 # Create your views here.
 def _cart_id(request):
@@ -76,18 +76,23 @@ def remove_cart(request, product_id):
     except Cart_items.DoesNotExist:
         return redirect('cart')
 
-
+@login_required
 def checkout(request):
     cart = Cart.objects.get(cart_id=_cart_id(request))
     cart_items = Cart_items.objects.filter(cart=cart)
     user = request.user
     delivery_address = Address.objects.filter(user=user)
     context = {
-        'cart_item' : cart_items,
-        'addresses' : delivery_address
+        'cart_item': cart_items,
+        'addresses': delivery_address
     }
-    
-    return render(request, 'store/checkout.html', context)
+
+    if cart_items.exists():
+        return render(request, 'store/checkout.html', context)
+    else:
+        messages.error(request, "Your cart is empty.")
+        return redirect('cart')
+
 
 
 def add_address(request):
@@ -105,7 +110,7 @@ def add_address(request):
         country = request.POST.get('country')
         address_type = request.POST.get('address_type')
 
-        # Create Address object and save to database
+        # Create Address object
         address = Address.objects.create(
             user=request.user,
             first_name=first_name,
@@ -120,6 +125,9 @@ def add_address(request):
             country=country,
             address_type=address_type
         )
+
+        # Save the address
         address.save()
         
+        # Redirect the user back to the checkout page
         return redirect('checkout')

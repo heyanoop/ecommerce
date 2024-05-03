@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<!-- ========================= SECTION CONTENT ========================= -->
+<section class="section-content padding-y bg">
+
+    <div class="container">
+        <div class="row">
+            <!-- SIDEBAR -->
+            {% include "user/includes/sidebar.html" %}
+            <div class="col-md-9">
+                <h2 class="section-title">Order History</h2>
+                {% for order in all_orders %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <!-- Order status -->
+                        {% if order.ordered == True %}
+                        <p><span class="text-success">Ordered</span></p>
+                        {% else %}
+                        <p><span class="text-danger">Cancelled</span></p>
+                        {% endif %} 
+                        <!-- Order details content -->
+                        <p>Order Number: #{{ item.id }}</p>
+                        <p>Order Date: {{ item.created_at }}</p>
+                        <hr>
+                        <h3>Order Items</h3>   
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <img src="{{ order.product.images.url }}" alt="{{ order.product.product_name }}" class="img-fluid">
+                            </div>
+                            <div class="col-md-8">
+                                <p>Product Name: {{ order.product.product_name }}</p>
+                                <p>Quantity: {{ order.quantity }}</p>
+                                <p>Price: ${{ order.product_price }}</p>
+                            </div>
+                        </div>
+                       
+                        <hr>
+                        <p>Total Price: ${{ order.Order.order_total }}</p>
+                        {% if order.ordered == True %}
+                        <a href = "{% url "cancel_order" id=order.id %}">
+                        <button type="button" class="btn btn-danger">Cancel Order</button>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+                <!-- Pagination -->
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination justify-content-center">
+                        {% if orders.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ orders.previous_page_number }}">Previous</a>
+                            </li>
+                        {% endif %}
+                        
+                    </ul>
+                </nav>
+            </div>
+        </div> <!-- row.// -->
+    </div>
+</section>
+<!-- ========================= SECTION CONTENT END// ========================= -->
+{% endblock content %}

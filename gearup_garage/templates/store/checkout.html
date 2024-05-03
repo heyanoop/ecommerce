@@ -10,30 +10,6 @@
                 <div class="card">
                     <div class="card-body">
                         <h4 class="card-title mb-4">Billing Address</h4>
-                        <!-- Existing addresses -->
-                        {% if addresses %}
-                        <form action="{% url 'checkout' %}" method="POST">
-                            {% csrf_token %}
-                            {% for address in addresses %}
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="radio" name="address" id="address{{ address.id }}" value="{{ address.id }}" required>
-                                <label class="form-check-label" for="address{{ address.id }}">
-                                    {{ address.first_name }} {{ address.last_name }}, 
-                                    {{ address.address_line_1 }}, 
-                                    {% if address.address_line_2 %}{{ address.address_line_2 }}, {% endif %}
-                                    {{ address.city }}, 
-                                    {{ address.state }}, 
-                                    {{ address.country }}, 
-                                    {{ address.pincode }}
-                                    {% comment %}<a href="{% url 'remove_address' address.id %}">Remove</a>{% endcomment %}
-                                </label>
-                            </div>
-                            {% endfor %}
-                            <button type="submit" class="btn btn-primary">Use Selected Address</button>
-                        </form>
-                        <hr>
-                        {% endif %}
-                        <!-- Add new address form -->
                         <button type="button" class="btn btn-success" data-toggle="collapse" data-target="#addAddressForm">Add New Address</button>
                         <div id="addAddressForm" class="collapse mt-3">
                             <form action="{% url 'add_address' %}" method="POST" onsubmit="return validateForm()">
@@ -107,6 +83,39 @@
                                 <button type="submit" class="btn btn-primary mt-3">Add Address</button>
                             </form>
                         </div>
+                        <!-- Existing addresses -->
+                        {% if addresses %}
+                        <form action="{% url 'place_order' %}" method="POST">
+                            {% csrf_token %}
+                            {% for address in addresses %}
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="address" id="address{{ address.id }}" value="{{ address.id }}" required>
+                                <label class="form-check-label" for="address{{ address.id }}">
+                                    {{ address.first_name }} {{ address.last_name }}, 
+                                    {{ address.address_line_1 }}, 
+                                    {% if address.address_line_2 %}{{ address.address_line_2 }}, {% endif %}
+                                    {{ address.city }}, 
+                                    {{ address.state }}, 
+                                    {{ address.country }}, 
+                                    {{ address.pincode }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        
+                            <!-- Payment method dropdown -->
+                            <div class="form-group">
+                                <label for="payment_method">Payment Method</label>
+                                <select name="payment_method" id="payment_method" class="form-control" required>
+                                    <option value="">Select Payment Method</option>
+                                    <option value="cash on Delivery">Cash On Delivery</option>
+                                    <option value="debit_card">Payment Gateway</option>
+
+                                </select>
+                            </div>
+                        
+                        {% endif %}
+                        <!-- Add new address form -->
+                       
                     </div>
                 </div>
             </aside>
@@ -149,6 +158,7 @@
                             </tbody>
                         </table>
                         <button type="submit" name="submit" class="btn btn-primary btn-block"> Place Order </button>
+                    </form>
                         <a href="{% url "store" %}" class="btn btn-light btn-block">Continue Shopping</a>
                     </div> <!-- card-body.// -->
                 </div> <!-- card.// -->
@@ -158,4 +168,27 @@
 
 {% endblock  %}
 
-<!-- Add this script at the
+
+<script>
+    // Function to validate the form
+    function validateForm() {
+        // Retrieve form fields
+        var firstName = document.forms["addressForm"]["first_name"].value;
+        var lastName = document.forms["addressForm"]["last_name"].value;
+        var email = document.forms["addressForm"]["email"].value;
+        var phone = document.forms["addressForm"]["phone"].value;
+        var addressLine1 = document.forms["addressForm"]["address_line_1"].value;
+        var city = document.forms["addressForm"]["city"].value;
+        var state = document.forms["addressForm"]["state"].value;
+        var country = document.forms["addressForm"]["country"].value;
+        var pincode = document.forms["addressForm"]["pincode"].value;
+        var addressType = document.forms["addressForm"]["address_type"].value;
+
+        // Simple validation checks
+        if (firstName == "" || lastName == "" || email == "" || phone == "" || addressLine1 == "" || city == "" || state == "" || country == "" || pincode == "" || addressType == "") {
+            alert("All fields must be filled out");
+            return false;
+        }
+        return true;
+    }
+</script>

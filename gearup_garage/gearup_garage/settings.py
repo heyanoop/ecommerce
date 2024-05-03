@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     'cart',
     'admin_panel',
     'user_dashboard',
-    'orders'
+    'orders',
 
 ]
 

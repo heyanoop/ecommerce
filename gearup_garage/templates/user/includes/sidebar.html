@@ -1,0 +1,19 @@
+<aside class="col-md-3 sidebar">
+    <ul class="list-group">
+        <a class="list-group-item" href="{% url "dashboard" %}"> My order history </a>
+        <a class="list-group-item active" href="{% url "manage_address" %}"> Saved Address </a>
+        <a class="list-group-item" href="{% url 'myorders' %}"> All Orders </a>
+        <a class="list-group-item" href="#"> Settings </a>
+        <a class="list-group-item" href="#"> My Selling Items </a>
+        <a class="list-group-item" href="#"> Received orders </a>
+    </ul>
+    <br>
+    <a class="btn btn-light btn-block" href="#"> <i class="fa fa-power-off"></i> <span class="text">Log out</span> </a>
+</aside>
+<style>
+    .list-group-item.active {
+        background-color: #007bff; /* Blue background color */
+        color: #fff; /* White text color */
+        border-color: #007bff; /* Blue border color */
+    }
+</style>

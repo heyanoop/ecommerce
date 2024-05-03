@@ -10,18 +10,16 @@
       <div class="header-body">
         <div class="row align-items-center py-4">
           <div class="col-lg-6 col-7">
-            <h6 class="h2 text-white d-inline-block mb-0">Users</h6>
+            <h6 class="h2 text-white d-inline-block mb-0">Orders</h6>
             <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
               <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
                 <li class="breadcrumb-item"><a href="#"><i class="fas fa-home"></i></a></li>
               
-                <li class="breadcrumb-item active" aria-current="page">Users</li>
+                <li class="breadcrumb-item active" aria-current="page">All Orders</li>
               </ol>
             </nav>
           </div>
-          <div class="col-lg-6 col-5 text-right">
-            <a href="{% url "add_user" %}" class="btn btn-sm btn-neutral">Add User</a>
-          </div>
+          
         </div>
       </div>
     </div>
@@ -34,63 +32,58 @@
         <div class="card">
           <!-- Card header -->
           <div class="card-header border-0">
-            <h3 class="mb-0">Users</h3>
+            <h3 class="mb-0">Orders</h3>
           </div>
           <!-- Light table -->
           <div class="table-responsive">
             <table class="table align-items-center table-flush">
               <thead class="thead-light">
                 <tr>
-                  <th scope="col" class="sort" data-sort="name">Email</th>
-                  <th scope="col" class="sort" data-sort="budget">First Name</th>
-                  <th scope="col" class="sort" data-sort="status">Last Name</th>
-                  <th scope="col">Username</th>
-                  <th scope="col" class="sort" data-sort="completion">Last Login</th>
-                  <th scope="col" class="sort" data-sort="completion">Is active</th>
-
+                  <th scope="col" class="sort" data-sort="name">Product_name</th>
+                  <th scope="col" class="sort" data-sort="budget">User</th>
+                  <th scope="col" class="sort" data-sort="status">Category</th>
+                  <th scope="col" class="sort" data-sort="completion">Stock</th>
+                  <th scope="col" class="sort" data-sort="completion">Ordered date</th>
                   <th scope="col"></th>
                 </tr>
               </thead>
               <tbody class="list">
-                {% for user in user %}
+                {% for order in all_orders %}
                 <tr>
                   <th scope="row">
                     <div class="media align-items-center">
                       <a href="#" class="avatar rounded-circle mr-3">
                         <img alt="Image placeholder" src="{% static '/assets/img/theme/bootstrap.jpg' %}">
                       </a>
-                      <div class="media-body">
-                        <a href="{% url 'edit_user' user_id=user.id %}" >
-                        <span class="name mb-0 text-sm">{{user.email}}</span>
-                      </a>
+                      <div class="media-body"><a href = "">
+                        <span class="name mb-0 text-sm">{{order.product.product_name}}</span>
                       </div>
                     </div>
                   </th>
                   <td class="budget">
-                    {{user.first_name}}
+                    {{order.user.first_name}}
                   </td>
                   <td class="budget">
-                    {{user.last_name}}
-                  </td>
-                  
-                  <td class="budget">
-                    {{user.username}}
+                    {{order.product.category}}
                   </td>
                   
                   <td class="budget">
-                    {{user.last_login}}
+                    {{order.product.stock}}
+                  </td>
+                  
+                  <td class="budget">
+                    {{order.created_at}}
                   </td>
                    
                   <td class="budget">
-                    {% if user.is_active %}
-                      Active
-                    {% else %}
-                      Not Active
-                    {%endif%}
+                    <td class="budget">
+                        <a href = "{% url "delete_order" order_id=order.id %}">
+                        <button type="button" class="btn btn-sm btn-danger">
+                            Delete Order
+                        </button>
+                    </a>
+                    </td>
                   </td>
-                  <td class="budget">
-                    <a href="{% url 'delete_user' id=user.id %}" class="btn btn-sm btn-danger">Delete</a>
-                </td>
                 </tr>
                 {% endfor %}
               </tbody>
@@ -110,7 +103,7 @@
                   <a class="page-link" href="#">1</a>
                 </li>
                 <li class="page-item">
-                  <a class="page-link" href="#">2 <span class="sr-onl 
+                  <a class="page-link" href="#">2 <span class="sr-only">(current)</span></a>
                 </li>
                 <li class="page-item"><a class="page-link" href="#">3</a></li>
                 <li class="page-item">

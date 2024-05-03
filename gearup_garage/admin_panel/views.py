@@ -7,6 +7,7 @@ from store.models import product
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 from django.utils.text import slugify
+from orders.models import OrderProduct
 
 def admin_required(view_func):
     def _wrapped_view_func(request, *args, **kwargs):
@@ -256,3 +257,37 @@ def delete_product(request, product_id):
         'product_instance': product_instance,
     }
     return render(request, 'myadmin/home/delete_product.html', context)
+
+
+def orders(request):
+    all_orders = OrderProduct.objects.all()
+    context = {
+        'all_orders':all_orders
+    }
+    return render(request,'myadmin/home/orders.html', context)
+
+def delete_order(request, order_id):
+    order_instance = get_object_or_404(OrderProduct, id=order_id)
+    
+    if request.method == 'POST':
+        product = order_instance.product
+        quantity = order_instance.quantity
+        product.stock += quantity
+        product.save()
+        order_instance.delete()
+        return redirect('orders')
+    
+    context = {
+        'order_instance': order_instance,
+    }
+    
+    return render(request, 'myadmin/home/delete_order.html', context)
+
+
+def delete_user(request, id):
+    user_instance = get_object_or_404(account, id = id)
+    user_instance.delete()
+    context = {
+        'user_instance': user_instance
+    }
+    return render(request, 'myadmin/home/delete_user.html', context)

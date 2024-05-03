@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from .models import product
 from categories.models import category
+from django.db.models import Q
 
 # Create your views here.
 def store(request, category_slug = None):
@@ -33,3 +34,21 @@ def product_details(request, category_slug, product_slug):
         raise e
     
     return render(request, 'store/product_details.html', context)
+
+def product_search(request):
+    context = {
+            'count' : 0,
+            'results': None,
+        }
+    if request.method == 'POST':
+        query = request.POST.get('search')
+        results = None
+        if query:
+            results = product.objects.filter(Q(product_name__icontains=query) | Q(description__icontains=query))
+            product_count = results.count()
+        context = {
+            'count' : product_count,
+            'results': results,
+        }
+        return render(request, 'store/search.html', context)
+    return render(request, 'store/search.html', context)

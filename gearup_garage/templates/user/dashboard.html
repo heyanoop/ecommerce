@@ -7,24 +7,11 @@
 
     <div class="container">
         <div class="row">
-        <aside class="col-md-3">
-            <!--   SIDEBAR   -->
-            <ul class="list-group">
-                <a class="list-group-item active" href="#"> My order history </a>
-                <a class="list-group-item" href="#"> Transactions </a>
-                <a class="list-group-item" href="#"> Return and refunds </a>
-                <a class="list-group-item" href="#">Settings </a>
-                <a class="list-group-item" href="#"> My Selling Items </a>
-                <a class="list-group-item" href="#"> Received orders </a>
-            </ul>
-            <br>
-            <a class="btn btn-light btn-block" href="#"> <i class="fa fa-power-off"></i> <span class="text">Log out</span> </a> 
-            <!--   SIDEBAR .//END   -->
-        </aside>
+        {% include "user/includes/sidebar.html" %}
         <main class="col-md-9">
             <article class="card">
             <header class="card-header">
-                <strong class="d-inline-block mr-3">Hi {{user_data.first_name}}</strong>
+                <strong class="d-inline-block mr-3">Hi {{user.first_name}}</strong>
                 <span>Order Date: 16 December 2018</span>
             </header>
             <div class="card-body">
