@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, HttpResponse
 from .forms import UserRegistration
-from .models import account
+from accounts.models import account
 from django.contrib import messages, auth
 from django.contrib.auth.decorators import login_required
 from django.contrib.sites.shortcuts import get_current_site
@@ -78,6 +78,7 @@ def login(request):
 
     return render(request, 'accounts/login.html')
 
+
 @login_required(login_url= login  )
 def logout(request):
     auth.logout(request)
@@ -98,3 +99,33 @@ def activate(request, uidb64, token):
     else:
         messages.error(request, 'invalid activation link, please try again')
         return redirect('register')
+    
+def forgot_password(request):
+    if request.method == 'POST':
+        email = request.POST['email']
+        if account.objects.filter(email=email).exists():
+            user = account.objects.get(email__iexact=email)
+            current_site = get_current_site(request)
+            mail_subject = "Reset Your password"
+            message = render_to_string('accounts/reset_password_email.html',{
+                'user'  : user,
+                'domain': current_site,
+                'uid'   : urlsafe_base64_encode(force_bytes(user.pk)),
+                'token' : default_token_generator.make_token(user),
+                
+            })
+
+            to_email = email
+            send_email = EmailMessage(mail_subject, message, to=[to_email])
+            send_email.send()
+            messages(request, 'password reset link has been sent to email')
+            return redirect('login')
+    else:
+        messages(request, 'Account does not exist in the database')
+        return redirect('forgot_password')
+        
+    return render(request, 'accounts/forgot_password.html')
+
+
+def reset_password(request):
+    return HttpResponse(request, 'hello')

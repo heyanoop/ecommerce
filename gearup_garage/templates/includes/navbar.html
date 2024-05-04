@@ -46,10 +46,10 @@
         </div> <!-- col.// -->
         <a href="{% url 'store'%}" class="btn btn-outline-primary">Store</a>
         <div class="col-lg  col-md-6 col-sm-12 col">
-            <form action="{% url 'product_search' %}" class="search" method="POST">
-                {% csrf_token %}
+            <form action="{% url 'product_search' %}" class="search" method = 'GET'>
+                
                 <div class="input-group w-100">
-                    <input type="text" class="form-control" style="width:60%;" name="search" placeholder="Search">
+                    <input type="text" class="form-control" style="width:60%;" name="keyword" placeholder="Search">
                     
                     <div class="input-group-append">
                         <button class="btn btn-primary" type="submit">

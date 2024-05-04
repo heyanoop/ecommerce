@@ -17,10 +17,15 @@ def regular_user_required(view_func):
 @login_required
 @regular_user_required
 def dashboard(request):
-    user = {
-        'user': request.user
-    }
-    return render(request, 'user/dashboard.html', user)
+    user = request.user
+    # account_details = account.objects.get(first_name=user)
+    # full_name= f"{account_details.first_name} {account_details.last_name}"
+    # context = {
+    #     'user' : account_details,
+    #     'full_name': full_name
+    # }
+    
+    return render(request, 'user/dashboard.html')
 
 @login_required
 @regular_user_required
