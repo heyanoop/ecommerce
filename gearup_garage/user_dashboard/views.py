@@ -5,6 +5,7 @@ from accounts.models import account
 from cart.models import Address
 from orders.models import OrderProduct, Order
 from store.models import product
+from django.contrib.auth import authenticate, logout
 
 def regular_user_required(view_func):
     def _wrapped_view_func(request, *args, **kwargs):
@@ -17,8 +18,8 @@ def regular_user_required(view_func):
 @login_required
 @regular_user_required
 def dashboard(request):
-    user = request.user
-    # account_details = account.objects.get(first_name=user)
+    # user = request.user
+    # account_details = account.objects.get(first_name = user)    
     # full_name= f"{account_details.first_name} {account_details.last_name}"
     # context = {
     #     'user' : account_details,
@@ -32,14 +33,15 @@ def dashboard(request):
 def address_management(request):
     addresses = Address.objects.all()
     context = {
-        'addresses': addresses
+        'addresses': addresses,
+        
     }
     return render(request, 'user/address_management.html', context)
 
 @login_required
 @regular_user_required
 def order_management(request):
-    orders = OrderProduct.objects.filter(user=request.user).order_by('-created_at')
+    orders = Order.objects.filter(user=request.user).order_by('-created_at')
     context = {
         'all_orders': orders
     }
@@ -47,17 +49,38 @@ def order_management(request):
 
 @login_required
 @regular_user_required
+def order_details(request, order_id):
+    single_order = OrderProduct.objects.filter(order_id=order_id)
+    order_address = Order.objects.get(id=order_id)
+    final_price = (order_address.tax)+ (order_address.order_total)
+    context ={
+        'single_order' : single_order,
+        'address' : order_address,
+        'final_price': final_price
+    }
+    return render(request, 'user/order_details.html', context)
+
+
+
+@login_required
+@regular_user_required
 def cancel_order(request, id):
-    order = get_object_or_404(OrderProduct, id=id)
+    order = get_object_or_404(Order, id=id)
+    order_product = OrderProduct.objects.filter(order=order)
+    
+    
     if order.user != request.user:
         return redirect('home')
     
-    order.ordered = False
+    order.status = 'CANCELLED'
+    order.is_cancelled = True
     order.save()
     
-    product = order.product  
-    product.stock += order.quantity
-    product.save()
+    for product in order_product:
+        product.is_cancelled = True
+        product.product.stock += product.quantity
+        product.save()
+        product.product.save()
 
     messages.success(request, 'Your order has been canceled.')
     return redirect('myorders')
@@ -93,3 +116,43 @@ def delete_address(request, id):
     address = get_object_or_404(Address, pk=id)
     address.delete()
     return redirect('manage_address')
+
+
+def edit_profile(request):
+    if request.method == 'POST':
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+        email = request.POST.get('email')
+        phone_number = request.POST.get('phone_number')
+         
+        user = request.user
+        user.first_name = first_name
+        user.last_name = last_name
+
+        user.phone_number = phone_number
+        user.save()
+
+        messages.success(request, 'Your profile has been updated successfully.')
+        return redirect('edit_profile')
+
+    return render(request, 'user/edit_profile.html')
+
+def change_password(request):
+    if request.method == 'POST':
+        user = request.user
+        
+        current_password = request.POST['current_password']
+        new_password = request.POST['new_password']
+
+        if authenticate(username=user.email, password=current_password):
+            user.set_password(new_password)
+            user.save()
+            
+            logout(request)
+            messages.success(request, 'Password changed successfully. Please login with your new password.')
+            return redirect('login')
+        else:
+            messages.error(request, 'Incorrect password. Please try again.')
+    
+    return render(request, 'user/change_password.html')
+

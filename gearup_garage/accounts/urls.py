@@ -6,6 +6,7 @@ urlpatterns = [
     path('login/', views.login,name = 'login'),
     path('logout/', views.logout, name = 'logout'),
     path('activate/<uidb64>/<token>', views.activate, name="activate"),
-    path('forgot/', views.forgot_password, name = 'forgot'),
-    path('resetpassword_validate/<uidb64>/<token>', views.reset_password, name="resetpassword_validate"),
+    path('forgot_password', views.forgot_password, name = 'forgot_password'),
+    path('resetpassword_validate/<uidb64>/<token>/', views.reset_password_validate, name="resetpassword_validate"),
+    path('reset_password', views.reset_password, name = "reset_password")
 ]

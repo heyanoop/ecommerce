@@ -7,7 +7,7 @@ from store.models import product
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 from django.utils.text import slugify
-from orders.models import OrderProduct
+from orders.models import Order, OrderProduct
 
 def admin_required(view_func):
     def _wrapped_view_func(request, *args, **kwargs):
@@ -148,10 +148,12 @@ def edit_category(request, category_id):
     
     return render(request, 'myadmin/home/edit_category.html', context)
 
+
 @login_required
 @admin_required
 def add_product(request):
     category_instance = category.objects.all()
+    
     if request.method == 'POST':
         product_name = request.POST.get('product_name')
         description = request.POST.get('description')
@@ -163,26 +165,32 @@ def add_product(request):
         # Generate slug
         slug = slugify(product_name)
 
-        # Create a new instance
-        new_product = product.objects.create(
-            product_name=product_name,
-            description=description,
-            price=price,
-            stock=stock,
-            slug=slug,
-            category_id=category_id
-        )
+        # Check if product with the same name already exists
+        if product.objects.filter(product_name=product_name).exists():
+            messages.error(request, "A product with this name already exists. Please choose a different name.")
+        else:
+            # Create a new instance
+            new_product = product.objects.create(
+                product_name=product_name,
+                description=description,
+                price=price,
+                stock=stock,
+                slug=slug,
+                category_id=category_id
+            )
 
-        if image:
-            new_product.images = image
-            new_product.save()
+            if image:
+                new_product.images = image
+                new_product.save()
 
-        return redirect('product_list')
+            messages.success(request, "Product added successfully.")
+            return redirect('product_list')
 
     context = {
         'category_instance': category_instance,
     }
     return render(request, 'myadmin/home/add_product.html', context)
+
 
 
 @login_required
@@ -192,11 +200,16 @@ def add_category(request):
         category_name = request.POST.get('category_name')
         description = request.POST.get('description')
 
+        # Check if a category with the same name already exists
+        if category.objects.filter(category_name=category_name).exists():
+            messages.error(request, f"A category with the name '{category_name}' already exists.")
+            return redirect('add_category')
+
         # Create a new category instance
         new_category = category.objects.create(
             category_name=category_name,
             description=description,
-            slug = slugify(category_name)
+            slug=slugify(category_name)
         )
 
         return redirect('category_list')
@@ -260,28 +273,11 @@ def delete_product(request, product_id):
 
 
 def orders(request):
-    all_orders = OrderProduct.objects.all()
+    all_orders = Order.objects.all()
     context = {
         'all_orders':all_orders
     }
     return render(request,'myadmin/home/orders.html', context)
-
-def delete_order(request, order_id):
-    order_instance = get_object_or_404(OrderProduct, id=order_id)
-    
-    if request.method == 'POST':
-        product = order_instance.product
-        quantity = order_instance.quantity
-        product.stock += quantity
-        product.save()
-        order_instance.delete()
-        return redirect('orders')
-    
-    context = {
-        'order_instance': order_instance,
-    }
-    
-    return render(request, 'myadmin/home/delete_order.html', context)
 
 
 def delete_user(request, id):
@@ -291,3 +287,24 @@ def delete_user(request, id):
         'user_instance': user_instance
     }
     return render(request, 'myadmin/home/delete_user.html', context)
+
+def order_details(request, order_id):
+    order_details = Order.objects.get(id=order_id)
+    order_product = OrderProduct.objects.filter(order=order_details)
+    print(order_product)
+    context = {
+        'order_details': order_details,
+        'order_product': order_product,
+        'final_price':order_details.order_total+order_details.tax
+    }
+    
+    return render(request, 'myadmin/home/order_details.html', context)
+
+
+def update_order_status(request, status_id):
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+        order = Order.objects.get(id=status_id)
+        order.status = new_status
+        order.save()
+        return redirect('order_details', order_id=status_id)

@@ -4,31 +4,34 @@ from categories.models import category
 from django.db.models import Q
 from django.core.paginator import PageNotAnInteger, EmptyPage, Paginator
 
-# Create your views here.
-def store(request, category_slug = None):
+def store(request, category_slug=None):
     categories = None
     products = None
-    if category_slug != None:
-        categories = get_object_or_404(category, slug = category_slug)
-        products = product.objects.filter(category = categories, is_available  = True)
-        paginator = Paginator(products, 6)
-        page = request.GET.get('page')
-        paged_product = paginator.get_page(page)
-        product_count = products.count()
-        
-    else:
-        
-        products = product.objects.filter(is_available = True)
-        paginator = Paginator(products, 6)
-        page = request.GET.get('page')
-        paged_product = paginator.get_page(page)
-        product_count = products.count()
-    context = {
-        'products' : paged_product,
-        'product_count' : product_count
+    sort_by = request.GET.get('sort_by') 
     
+    if category_slug:
+        categories = get_object_or_404(category, slug=category_slug)
+        products = product.objects.filter(category=categories, is_available=True)
+    else:
+        products = product.objects.filter(is_available=True)
+
+    
+    if sort_by == 'name':
+        products = products.order_by('product_name')
+    elif sort_by == 'price':
+        products = products.order_by('price')
+
+    paginator = Paginator(products, 6)
+    page_number = request.GET.get('page')
+    paged_products = paginator.get_page(page_number)
+    product_count = products.count()
+
+    context = {
+        'products': paged_products,
+        'product_count': product_count,
     }
     return render(request, 'store/store.html', context)
+
 
 def product_details(request, category_slug, product_slug):
     try:

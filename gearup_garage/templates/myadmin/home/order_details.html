@@ -4,6 +4,50 @@
 {% block title %} Tables {% endblock title %}
 
 {% block content %}
+<div class="container-fluid mt--6">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Delivery Address</h4>
+                    <p><strong>Address Line 1:</strong> {{ order_details.address_line_1 }}</p>
+                    <p><strong>Address Line 2:</strong> {{ order_details.address_line_2 }}</p>
+                    <p><strong>City:</strong> {{ order_details.city }}</p>
+                    <p><strong>State:</strong> {{ order_details.state }}</p>
+                    <p><strong>Country:</strong> {{ order_details.country }}</p>
+                    <p><strong>Pincode:</strong> {{ order_details.pincode }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Order Info</h4>
+                    <p><strong>User:</strong> {{ order_details.user.first_name }}</p>
+                    <p><strong>Order ID:</strong> {{ order_details.id }}</p>
+                    <form method="POST" action="{% url 'update_order' status_id=order_details.id %}">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="status">Status:</label>
+                            <select class="form-control" id="status" name="status">
+                                <option value="PENDING" {% if order_details.status == 'PENDING' %} selected {% endif %}>Pending</option>
+                                <option value="CONFIRMED" {% if order_details.status == 'CONFIRMED' %} selected {% endif %}>Confirmed</option>
+                                <option value="SHIPPED" {% if order_details.status == 'SHIPPED' %} selected {% endif %}>Shipped</option>
+                                <option value="CANCELLED" {% if order_details.status == 'CANCELLED' %} selected {% endif %}>Cancelled</option>
+                                <!-- Add more status options as needed -->
+                            </select>
+                        </div>
+                        <input type="hidden" name="order_id" value="{{ order_details.id }}">
+                        <button type="submit" class="btn btn-primary">Update Status</button>
+                    </form>
+                    <p><strong>Total Price:</strong> {{ order_details.order_total }}</p>
+                    <p><strong>Final Price:</strong> {{ final_price }}</p>
+                    <p><strong>Ordered Date:</strong> {{ order_details.created_at }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
   <div class="header bg-primary pb-6">
     <div class="container-fluid">
@@ -12,11 +56,7 @@
           <div class="col-lg-6 col-7">
             <h6 class="h2 text-white d-inline-block mb-0">Orders</h6>
             <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
-              <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
-                <li class="breadcrumb-item"><a href="#"><i class="fas fa-home"></i></a></li>
-              
-                <li class="breadcrumb-item active" aria-current="page">All Orders</li>
-              </ol>
+        
             </nav>
           </div>
           
@@ -24,6 +64,7 @@
       </div>
     </div>
   </div>
+  
   
   <!-- Page content -->
   <div class="container-fluid mt--6">
@@ -39,16 +80,14 @@
             <table class="table align-items-center table-flush">
               <thead class="thead-light">
                 <tr>
-                  <th scope="col" class="sort" data-sort="name">User</th>
-                  <th scope="col" class="sort" data-sort="budget">order id</th>
-                  <th scope="col" class="sort" data-sort="status">status</th>
-                  <th scope="col" class="sort" data-sort="completion">Total price</th>
-                  <th scope="col" class="sort" data-sort="completion">Ordered date</th>
-                  <th scope="col"></th>
+                  <th scope="col" class="sort" data-sort="budget">Product</th>
+                  <th scope="col" class="sort" data-sort="budget">Quantity</th>
+                  <th scope="col" class="sort" data-sort="budget"></th>
+                  <th scope="col" class="sort" data-sort="budget">Price</th>
                 </tr>
               </thead>
               <tbody class="list">
-                {% for order in all_orders %}
+                {% for order in order_product %}
                 <tr>
                   <th scope="row">
                     <div class="media align-items-center">
@@ -61,29 +100,17 @@
                     </div>
                   </th>
                   <td class="budget">
-                    {{order.id}}
+                    {{order.product}}
                   </td>
                   <td class="budget">
-                    {{order.status}}
+                    {{order.Order.status}}
                   </td>
                   
                   <td class="budget">
-                    {{order.order_total}}
+                    {{order.product_price}}
                   </td>
                   
-                  <td class="budget">
-                    {{order.created_at}}
-                  </td>
-                   
-                  <td class="budget">
-                    <td class="budget">
-                        <a href = "{% url "order_details" order_id=order.id  %}">
-                          <button type="button" class="btn btn-info">Order Info</button>
-                        </a>
-                        
-                    </a>
-                    </td>
-                  </td>
+                
                 </tr>
                 {% endfor %}
               </tbody>

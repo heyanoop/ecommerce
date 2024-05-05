@@ -3,6 +3,19 @@
 {% block title %} Add Product {% endblock title %}
 
 {% block content %}
+{% if messages %}
+<div class="row">
+    <div class="col">
+        <div class="alert alert-dismissible fade show" role="alert">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <div class="col-xl-8 order-xl-1">
     <div class="card">
@@ -14,7 +27,7 @@
             </div>
         </div>
         <div class="card-body">
-            <form method="post" enctype="multipart/form-data">
+            <form method="post" enctype="multipart/form-data" id="add-product-form">
                 {% csrf_token %}
                 <h6 class="heading-small text-muted mb-4">Product Information</h6>
                 <div class="pl-lg-4">
@@ -126,7 +139,7 @@
         document.getElementById('input-slug').value = slug;
     });
 
-    // Image Cropper
+    // Image Cropper and File Type Validation
     var $image = document.getElementById('image_preview');
     var cropBoxData;
     var canvasData;
@@ -134,11 +147,21 @@
 
     $('#id_image').on('change', function() {
         var reader = new FileReader();
+        var file = this.files[0];
+
+        // Validate file type
+        if (!file.type.match('image/jpeg') && !file.type.match('image/png')) {
+            alert('Please select a JPG or PNG file.');
+            $('#id_image').val(''); // Clear the file input field
+            return;
+        }
+
+        // Continue with file reading and cropper initialization
         reader.onload = function(e) {
             $image.src = e.target.result;
             initCropper();
         }
-        reader.readAsDataURL(this.files[0]);
+        reader.readAsDataURL(file);
     });
 
     function initCropper() {

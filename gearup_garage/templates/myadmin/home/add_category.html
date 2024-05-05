@@ -3,6 +3,19 @@
 {% block title %} Add Category {% endblock title %}
 
 {% block content %}
+{% if messages %}
+<div class="row">
+    <div class="col">
+        <div class="alert alert-dismissible fade show" role="alert">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <div class="col-xl-8 order-xl-1">
     <div class="card">
