@@ -24,7 +24,9 @@ def add_cart(request, product_id):
     
     try:
         cart_item = Cart_items.objects.get(cart=cart, product=product_instance)
-        if cart_item.quantity < product_instance.stock:  # Check if there is enough stock to add to the cart
+        if cart_item.quantity > 5:
+            messages.error(request, 'Maximum quantity per user has been reached')               
+        elif cart_item.quantity < product_instance.stock:  # Check if there is enough stock to add to the cart
             cart_item.quantity += 1
             cart_item.save()
             messages.success(request, "Product added to cart")
@@ -49,7 +51,7 @@ def cartitems(request):
             cart_id = _cart_id(request)
         )
     cart.save()
-    cart_items = Cart_items.objects.filter(cart = cart)
+    cart_items = Cart_items.objects.filter(cart=cart).order_by('-added_time')
     total_price = sum(item.product.price * item.quantity for item in cart_items)
     tax = (total_price * 2/100)
     
@@ -131,3 +133,22 @@ def add_address(request):
         
         # Redirect the user back to the checkout page
         return redirect('checkout')
+
+
+def cart_increase(request, increase_id):
+    cart_item = Cart_items.objects.get(id=increase_id)
+    if cart_item.quantity >= 5:
+        messages.error(request, 'Maximum quantity per user has been reached')
+    else:
+        cart_item.quantity += 1
+        cart_item.save()
+    return redirect('cart')
+
+def cart_decrease(request, decrease_id):
+    cart_item = Cart_items.objects.get(id=decrease_id)
+    if cart_item.quantity <= 1:
+        messages.error(request, 'Minimum quantity per user has been reached')
+    else:
+        cart_item.quantity -= 1
+        cart_item.save()
+    return redirect('cart')

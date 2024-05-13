@@ -45,7 +45,7 @@
                         <div class="col-lg-3">
                             <div class="form-group">
                                 <label for="input-price">Price</label>
-                                <input type="number" id="input-price" class="form-control" placeholder="Price" value="{{ instance.price }}" name="price" min="0" required>
+                                <input type="number" id="input-price" class="form-control" placeholder="Price" value="{{ instance.price }}" name="price" min="1" required>
                                 <span id="price-validation-msg" class="text-danger"></span>
                             </div>
                         </div>
@@ -76,7 +76,8 @@
                                 <!-- Display placeholder if no image exists -->
                                 <span>No image available</span>
                             {% endif %}
-                            <input type="file" class="form-control-file" name="image" accept="image/jpeg, image/png">
+                            <input type="file" class="form-control-file" name="image" accept="image/jpeg, image/png" id="image-input">
+                            <span id="image-validation-msg" class="text-danger"></span>
                         </div>
                     </div>
                     <!-- Category Dropdown -->
@@ -84,9 +85,9 @@
                         <div class="form-group">
                             <label for="category-dropdown">Category</label>
                             <select class="form-control" id="category-dropdown" name="category_dropdown" required>
-                                <option value="">Select Category</option>
+                                <option value="">Select</option>
                                 {% for category in category_instance %}
-                                    <option value="{{ category.id }}">{{ category.category_name }}</option>
+                                    <option value="{{ category.id }}"{% if category.id == instance.category.id %}selected{% endif %}>{{ category.category_name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -108,43 +109,48 @@
 </div>
 
 {% include "includes/footer.html" %}
+{% endblock %}
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-KcloFJsxU3pdmoyzgKwppppHdRhL0XGlR3fLr7J3MEQ=" crossorigin="anonymous"></script>
-
+<!-- Specific JS goes HERE -->
+{% block javascripts %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropper/4.1.0/cropper.min.js"></script>
 <script>
+    // Add your validation scripts here
     $(document).ready(function() {
-        // Form submission validation
-        $('#edit-product-form').on('submit', function(event) {
-            // Validate Product Name
+        $('#edit-product-form').submit(function(event) {
+            // Validate product name
             var productName = $('#input-product-name').val().trim();
             if (productName === '') {
                 $('#name-validation-msg').text('Product name is required.');
                 event.preventDefault();
-            } else if (/^\s/.test(productName)) {
-                $('#name-validation-msg').text('Product name cannot begin with a space.');
-                event.preventDefault();
-            } else {
-                $('#name-validation-msg').text('');
             }
 
-            // Validate Price
-            var price = parseFloat($('#input-price').val());
-            if (isNaN(price) || price < 0) {
-                $('#price-validation-msg').text('Price must be a positive number.');
+            // Validate price
+            var price = $('#input-price').val().trim();
+            if (price === '') {
+                $('#price-validation-msg').text('Price is required.');
                 event.preventDefault();
-            } else {
-                $('#price-validation-msg').text('');
             }
 
-            // Validate Stock
-            var stock = parseInt($('#input-stock').val());
-            if (isNaN(stock) || stock < 0) {
-                $('#stock-validation-msg').text('Stock must be a positive number.');
+            // Validate stock
+            var stock = $('#input-stock').val().trim();
+            if (stock === '') {
+                $('#stock-validation-msg').text('Stock is required.');
                 event.preventDefault();
-            } else {
-                $('#stock-validation-msg').text('');
+            }
+
+            // Validate image
+            var imageInput = $('#image-input');
+            var imageFile = imageInput.get(0).files[0];
+            if (imageFile) {
+                var allowedExtensions = /(\.jpg|\.jpeg|\.png)$/i;
+                if (!allowedExtensions.exec(imageFile.name)) {
+                    $('#image-validation-msg').text('Please upload a valid image file (JPG, JPEG, or PNG).');
+                    event.preventDefault();
+                }
             }
         });
     });
 </script>
-{% endblock %}
+{% endblock javascripts %}

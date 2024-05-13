@@ -15,6 +15,7 @@ class Cart_items(models.Model):
     cart = models.ForeignKey(Cart, on_delete= models.CASCADE)
     quantity  = models.IntegerField()
     is_active = models.BooleanField(default= True)
+    added_time = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
         return self.product

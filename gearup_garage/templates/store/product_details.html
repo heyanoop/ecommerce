@@ -12,8 +12,8 @@
             <aside class="col-md-6">
                 <article class="gallery-wrap"> 
                     <div class="img-big-wrap">
-                        <a href="#"><img src="{{ single_product.images.url }}" id="zoom_01" data-zoom-image="{{ single_product.images.url }}"></a>
-                    </div> <!-- img-big-wrap.// -->
+                        <img src="{{ single_product.images.url }}" id="zoom_01" data-zoom-image="{{ single_product.images.url }}" class="img-fluid">
+                    </div>
                     
                 </article> <!-- gallery-wrap .end// -->
             </aside>
@@ -110,12 +110,19 @@
 
 {% endblock %}
 
-{% block javascripts %}
-<script src="{% static 'js/jquery.elevateZoom-3.0.8.min.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/drift-zoom/1.3.1/Drift.min.js"></script>
 <script>
-    $('#zoom_01').elevateZoom({
-        zoomType: "inner",
-        cursor: "crosshair"
+    // Initialize Drift.js after the DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        var imageElement = document.getElementById('zoom_01');
+        if (imageElement) {
+            var drift = new Drift(imageElement, {
+                paneContainer: document.querySelector('.img-big-wrap'),
+                zoomFactor: 3,
+                inlinePane: false
+            });
+        } else {
+            console.error("Image element not found.");
+        }
     });
 </script>
-{% endblock javascripts %}

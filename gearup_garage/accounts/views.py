@@ -9,6 +9,7 @@ from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
+from user_dashboard.views import validate_password_complexity
 
 # Create your views here.
 def register(request):
@@ -141,6 +142,10 @@ def reset_password(request):
     if request.method == 'POST':
         password = request.POST['password']
         confirm_password = request.POST['confirmpassword']
+        if not validate_password_complexity(password):
+            messages.error(request, 'New password must contain at least 8 characters, including at least one letter, one number, and one special character')
+            return redirect('reset_password')
+            
         if password == confirm_password:
             uid = request.session.get('uid')
             user = account.objects.get(pk=uid)

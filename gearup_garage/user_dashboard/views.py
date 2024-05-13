@@ -6,6 +6,7 @@ from cart.models import Address
 from orders.models import OrderProduct, Order
 from store.models import product
 from django.contrib.auth import authenticate, logout
+import re
 
 def regular_user_required(view_func):
     def _wrapped_view_func(request, *args, **kwargs):
@@ -18,14 +19,6 @@ def regular_user_required(view_func):
 @login_required
 @regular_user_required
 def dashboard(request):
-    # user = request.user
-    # account_details = account.objects.get(first_name = user)    
-    # full_name= f"{account_details.first_name} {account_details.last_name}"
-    # context = {
-    #     'user' : account_details,
-    #     'full_name': full_name
-    # }
-    
     return render(request, 'user/dashboard.html')
 
 @login_required
@@ -143,6 +136,10 @@ def change_password(request):
         
         current_password = request.POST['current_password']
         new_password = request.POST['new_password']
+        
+        if not validate_password_complexity(new_password):
+            messages.error(request, 'New password must contain at least 8 characters, including at least one letter, one number, and one special character')
+            return redirect('change_password')
 
         if authenticate(username=user.email, password=current_password):
             user.set_password(new_password)
@@ -156,3 +153,9 @@ def change_password(request):
     
     return render(request, 'user/change_password.html')
 
+def validate_password_complexity(password):
+    pattern = r"^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$"
+    if re.match(pattern, password):
+        return True
+    else:
+        return False

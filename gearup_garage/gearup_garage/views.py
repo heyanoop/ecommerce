@@ -2,8 +2,7 @@ from django.shortcuts import render
 from store.models import product
 
 def home(request):
-    user = request.session.get('user_id')
-    products = product.objects.all() 
+    products = product.objects.filter(stock__gte=1).order_by('-views')[:8]
     context = {
         'products' : products
     }

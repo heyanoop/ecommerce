@@ -47,18 +47,21 @@
 		</figure>
 	</td>
 	<td> 
-		<!-- col.// -->
-					<div class="col"> 
-						<div class="input-group input-spinner">
-							<div class="input-group-prepend">
-							<button class="btn btn-light" type="button" id="button-plus"> <i class="fa fa-minus"></i> </button>
-							</div>
-							<input type="text" class="form-control"  value="{{item.quantity}}">
-							<div class="input-group-append">
-							<button class="btn btn-light" type="button" id="button-minus"> <i class="fa fa-plus"></i> </button>
-							</div>
-						</div> <!-- input-group.// -->
-					</div> <!-- col.// -->
+		<div class="col"> 
+			<div class="input-group input-spinner">
+				<div class="input-group-prepend">
+					<a href="{% url 'cart_increase' increase_id=item.id %}" class="btn btn-light">
+						<i class="fa fa-plus"></i>
+					</a>
+				</div>
+				<input type="text" class="form-control"  value="{{item.quantity}}">
+				<div class="input-group-append">
+					<a href="{% url 'cart_decrease' decrease_id=item.id %}" class="btn btn-light">
+						<i class="fa fa-minus"></i>
+					</a>
+				</div>
+			</div> <!-- input-group.// -->
+		</div>
 	</td>
 	<td> 
 		<div class="price-wrap"> 

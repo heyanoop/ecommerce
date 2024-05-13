@@ -58,9 +58,8 @@
                     <div class="col-lg-6">
                         <div class="form-group">
                             <label for="input-phone-number">Phone number</label>
-                            <input type="text" id="input-phone-number" class="form-control" placeholder="Phone number" value="{{ instance.phone_number }}" name="phone_number" required>
-                            <!-- HTML5 pattern attribute for phone number format validation -->
-                            <!-- Example: <input type="text" pattern="[0-9]{10}" title="Please enter a valid 10-digit phone number" required> -->
+                                <input type="text" id="input-phone-number" class="form-control" placeholder="Phone number" value="{{ instance.phone_number }}" name="phone_number" required pattern="[0-9]{10}" title="Please enter a valid 10-digit phone number">
+
                         </div>
                     </div>
                 </div>

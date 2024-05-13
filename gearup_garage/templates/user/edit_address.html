@@ -59,9 +59,8 @@
       
       <label for="email">Email:</label>
       <input type="email" id="email" name="email" value="{{ address.email }}" required>
-      
       <label for="phone">Phone:</label>
-      <input type="text" id="phone" name="phone" value="{{ address.phone }}" required>
+      <input type="text" id="phone" name="phone" value="{{ address.phone }}" required pattern="\d{3}\d{3}\d{4}" title="Please enter a phone number in XXX-XXX-XXXX format">
       
       <label for="address_line_1">Address Line 1:</label>
       <input type="text" id="address_line_1" name="address_line_1" value="{{ address.address_line_1 }}" required>
@@ -70,8 +69,8 @@
       <input type="text" id="address_line_2" name="address_line_2" value="{{ address.address_line_2 }}">
       
       <label for="pincode">Pincode:</label>
-      <input type="text" id="pincode" name="pincode" value="{{ address.pincode }}" required>
-      
+      <input type="text" id="pincode" name="pincode" value="{{ address.pincode }}" required pattern="\d{6}" title="Please enter a valid 6-digit pincode">
+
       <label for="city">City:</label>
       <input type="text" id="city" name="city" value="{{ address.city }}" required>
       

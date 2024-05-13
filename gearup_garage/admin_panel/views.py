@@ -44,7 +44,7 @@ def user_list(request):
 @never_cache
 @admin_required
 def product_list(request):
-    product_data = product.objects.all()
+    product_data = product.objects.order_by('created_date').all()
     context = {
         'product' : product_data
     }
@@ -305,6 +305,13 @@ def update_order_status(request, status_id):
     if request.method == 'POST':
         new_status = request.POST.get('status')
         order = Order.objects.get(id=status_id)
+        order_products = OrderProduct.objects.filter(order=order)
         order.status = new_status
+        if order.status == 'CANCELLED':
+            for order_product in order_products:
+                product = order_product.product
+                product.stock += order_product.quantity  # Increase stock by order quantity
+                product.save() 
+            
         order.save()
         return redirect('order_details', order_id=status_id)

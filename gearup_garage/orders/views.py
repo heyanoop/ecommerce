@@ -24,9 +24,14 @@ def place_order(request):
         selected_address = Address.objects.get(id=address_id)
         cart = Cart.objects.get(cart_id=_cart_id(request))
         cart_items = Cart_items.objects.filter(cart=cart)  
-
         order_total = sum(item.product.price * item.quantity for item in cart_items)
         tax = order_total * 2 / 100
+        
+        for cart_item in cart_items:
+            if cart_item.quantity > cart_item.product.stock:
+                messages.error(request, f"Sorry, {cart_item.product.product_name} is out of stock.")
+                return redirect('cart')  # Redirect back to the cart page if there is insufficient stock
+
 
         # Create order
         order = Order.objects.create(
@@ -74,6 +79,6 @@ def place_order(request):
         # Delete cart items after order is placed
         cart_items.delete()  
 
-        return render(request, 'store/order_placed.html') 
+        return render(request,'store/order_placed.html')
     else:
         return render(request, 'error.html', {'message': 'Invalid request method'})
