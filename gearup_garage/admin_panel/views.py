@@ -53,7 +53,7 @@ def product_list(request):
 @login_required
 @admin_required
 def category_list(request):
-    category_data = category.objects.all()
+    category_data = category.objects.order_by('category_name').all()
     context = {
         'category' : category_data
     }
@@ -74,6 +74,14 @@ def user_edit(request, user_id):
         is_staff = request.POST.get('is_staff')
         is_active = request.POST.get('is_active')
         is_superadmin = request.POST.get('is_superadmin')
+        
+        if account.objects.filter(email=email).exclude(id=user_id).exists():
+            messages.error(request, 'Email already exists.')
+            return redirect('edit_user', user_id=user_id)
+        
+        if account.objects.filter(phone_number=phone_number).exclude(id=user_id).exists():
+            messages.error(request, 'Phone number already exists.')
+            return redirect('edit_user', user_id=user_id)
         
         instance.first_name = first_name
         instance.last_name = last_name
@@ -165,11 +173,10 @@ def add_product(request):
         # Generate slug
         slug = slugify(product_name)
 
-        # Check if product with the same name already exists
         if product.objects.filter(product_name=product_name).exists():
             messages.error(request, "A product with this name already exists. Please choose a different name.")
         else:
-            # Create a new instance
+           
             new_product = product.objects.create(
                 product_name=product_name,
                 description=description,
@@ -273,7 +280,7 @@ def delete_product(request, product_id):
 
 
 def orders(request):
-    all_orders = Order.objects.all()
+    all_orders = Order.objects.order_by('-created_at').all()
     context = {
         'all_orders':all_orders
     }
