@@ -12,7 +12,7 @@
             <div class="col-md-9">
                 <h2 class="section-title">Edit Profile</h2>
                 {% include 'includes/alerts.html' %}
-                <form method="post">
+                <form method="post" onsubmit="return validateForm()">
                     {% csrf_token %}
                     <div class="form-group">
                         <label for="first_name">First Name</label>
@@ -39,4 +39,26 @@
     </div>
 </section>
 <!-- ========================= SECTION CONTENT END// ========================= -->
+
+<script>
+    function validateForm() {
+        var firstName = document.getElementById("first_name").value;
+        var lastName = document.getElementById("last_name").value;
+        var firstNameRegex = /^[^_\s\d][a-zA-Z\s]*$/;
+        var lastNameRegex = /^[^_\s\d][a-zA-Z\s]*$/;
+
+        if (!firstNameRegex.test(firstName)) {
+            alert("First name cannot start with underscore or contain numbers.");
+            return false;
+        }
+
+        if (!lastNameRegex.test(lastName)) {
+            alert("Last name cannot start with underscore or contain numbers.");
+            return false;
+        }
+
+        return true;
+    }
+</script>
+
 {% endblock content %}

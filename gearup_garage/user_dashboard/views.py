@@ -53,6 +53,15 @@ def order_details(request, order_id):
     }
     return render(request, 'user/order_details.html', context)
 
+@login_required
+@regular_user_required
+def confirm_cancel(request, id):
+    single_order = Order.objects.get(id=id)
+    context = {
+        'single_order':single_order,
+
+    }
+    return render(request, 'user/confirm_cancel.html', context)
 
 
 @login_required

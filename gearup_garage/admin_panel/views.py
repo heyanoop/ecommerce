@@ -115,19 +115,25 @@ def edit_product(request, product_id):
         stock = request.POST.get('stock')
         
         category_inst = category.objects.get(id=category_list)
-
+        
+        
+        
+        if product.objects.filter(product_name=product_name).exists():
+            messages.error(request, "A product with this name already exists. Please choose a different name.")
+        
+        else:
         # Update the instance with the new data
-        instance.product_name = product_name
-        instance.description = description
-        instance.price = price
-        instance.category = category_inst
-        instance.stock  = stock
-        if image:
-            instance.images = image
-        
-        instance.save()
-        
-        return redirect('product_list')
+            instance.product_name = product_name
+            instance.description = description
+            instance.price = price
+            instance.category = category_inst
+            instance.stock  = stock
+            if image:
+                instance.images = image
+            
+            instance.save()
+            
+            return redirect('product_list')
 
     context = {
         'instance': instance,
@@ -250,6 +256,14 @@ def add_user(request):
         is_active = request.POST.get('is_active')
         is_superadmin = request.POST.get('is_superadmin')
         
+        if account.objects.filter(email=email).exists():
+            messages.error(request, 'Email already exists.')
+            return redirect('add_user')
+        
+        if account.objects.filter(phone_number=phone_number).exists():
+            messages.error(request, 'Phone number already exists.')
+            return redirect('add_user')
+        
         account.objects.create(
             first_name=first_name,
             last_name=last_name,
@@ -287,8 +301,8 @@ def orders(request):
     return render(request,'myadmin/home/orders.html', context)
 
 
-def delete_user(request, id):
-    user_instance = get_object_or_404(account, id = id)
+def delete_user(request, user_id):
+    user_instance = get_object_or_404(account, id = user_id)
     user_instance.delete()
     context = {
         'user_instance': user_instance
@@ -307,7 +321,8 @@ def order_details(request, order_id):
     
     return render(request, 'myadmin/home/order_details.html', context)
 
-
+@login_required
+@admin_required
 def update_order_status(request, status_id):
     if request.method == 'POST':
         new_status = request.POST.get('status')

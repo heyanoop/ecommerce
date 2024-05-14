@@ -11,7 +11,7 @@
                     <header class="card-header">
                         <strong class="d-inline-block mr-3 d-flex justify-content-center">Single order View</strong>
                         {% if address.status != 'CANCELLED' %}
-                        <div class="text-right"><a href="{% url "cancel_order" id=address.id %}" class="d-inline-block mr-3 btn btn-primary">Cancel Order</a></div>
+                        <div class="text-right"><a href="{% url "confirm_cancel" id=address.id %}" class="d-inline-block mr-3 btn btn-primary">Cancel Order</a></div>
                         {% endif %}
                     </header>
                     <div class="card-body">

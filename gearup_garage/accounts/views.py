@@ -15,7 +15,6 @@ from user_dashboard.views import validate_password_complexity
 def register(request):
     
     if request.user.is_authenticated:
-        # Redirect the user to the home page (or any other appropriate page)
         return redirect('home')
     if request.method == 'POST':
         form = UserRegistration(request.POST)
@@ -27,6 +26,9 @@ def register(request):
             username = form.cleaned_data.get('email')
             password = form.cleaned_data.get('password')
             username = email.split("@")[0]
+            if not validate_password_complexity(password):
+                messages.error(request, 'New password must contain at least 8 characters, including at least one letter, one number, and one special character')
+                return redirect('register')
             
             user = account.objects.create_user(username=username, email=email, password=password, first_name=first_name, last_name=last_name)
             user.phone_number = phone_number

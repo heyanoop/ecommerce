@@ -49,7 +49,7 @@
   </style>
 
   <div class="form-container">
-    <form method="post">    
+    <form method="post" onsubmit="return validateForm()">    
       {% csrf_token %}
       <label for="first_name">First Name:</label>
       <input type="text" id="first_name" name="first_name" value="{{ address.first_name }}" required>
@@ -59,8 +59,9 @@
       
       <label for="email">Email:</label>
       <input type="email" id="email" name="email" value="{{ address.email }}" required>
+      
       <label for="phone">Phone:</label>
-      <input type="text" id="phone" name="phone" value="{{ address.phone }}" required pattern="\d{3}\d{3}\d{4}" title="Please enter a phone number in XXX-XXX-XXXX format">
+      <input type="tel" id="phone" name="phone" value="{{ address.phone }}" required pattern="\d{3}\d{3}\d{4}" title="Please enter a phone number in XXX-XXX-XXXX format">
       
       <label for="address_line_1">Address Line 1:</label>
       <input type="text" id="address_line_1" name="address_line_1" value="{{ address.address_line_1 }}" required>
@@ -89,4 +90,24 @@
       <button type="submit">Update Address</button>
     </form>
   </div>
+
+  <script>
+    function validateForm() {
+      var firstName = document.getElementById("first_name").value;
+      var lastName = document.getElementById("last_name").value;
+      var address_line_1 = 
+      
+      if (!isNaN(firstName)) {
+        alert("First name cannot be a number.");
+        return false;
+      }
+      
+      if (!isNaN(lastName)) {
+        alert("Last name cannot be a number.");
+        return false;
+      }
+      
+      return true;
+    }
+  </script>
 {% endblock %}
