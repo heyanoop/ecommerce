@@ -19,7 +19,8 @@ class Order(models.Model):
         ('PENDING', 'pending'),
         ('CONFIRMED', 'confirmed'),
         ('SHIPPED', 'shipped'),
-        ('CANCELLED', 'Cancelled'),
+        ('CANCELLED', 'cancelled'),
+        ('RETURN', 'return')
                     
     )
     user = models.ForeignKey(account, on_delete=models.SET_NULL, null=True)

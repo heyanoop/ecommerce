@@ -3,7 +3,6 @@
 
 {% block content %}
 
-
 <section class="section-content padding-y bg">
     <div class="container">
     
@@ -12,12 +11,23 @@
         
         <div class="row no-gutters">
             <aside class="col-md-6">
-                <article class="gallery-wrap"> 
-                    <div class="img-big-wrap">
-                        <img src="{{ single_product.images.url }}" class="img-fluid product-image">
+                <div class="product-img-wrapper">
+                    <div class="swiper-container">
+                        <div class="swiper-wrapper">
+                            <!-- Images display here -->
+                            {% for image in product_images %}
+                                <div class="swiper-slide">
+                                    <img src="{{ image.image.url }}" alt="{{ single_product.product_name }}" class="product-image">
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <!-- Add Pagination -->
+                        <div class="swiper-pagination"></div>
+                        <!-- Add Navigation -->
+                        <div class="swiper-button-next"></div>
+                        <div class="swiper-button-prev"></div>
                     </div>
-                    
-                </article> <!-- gallery-wrap .end// -->
+                </div>
             </aside>
             <main class="col-md-6 border-left">
                 <article class="content-body">
@@ -43,7 +53,7 @@
                                     <input type="radio" name="radio_color"> Gray
                                 </label>
                                 <label class="btn btn-light active">
-                                    <input type="radio" name="radio_color checked"> Gold
+                                    <input type="radio" name="radio_color" checked> Gold
                                 </label>
                                 <label class="btn btn-light">
                                     <input type="radio" name="radio_color"> Black
@@ -57,23 +67,24 @@
                             <h6>Select Size</h6>
                             <div class="btn-group btn-group-sm btn-group-toggle" data-toggle="buttons">
                                 <label class="btn btn-light">
-                                    <input type="radio" name="radio_color"> S
+                                    <input type="radio" name="radio_size"> S
                                 </label>
                                 <label class="btn btn-light active">
-                                    <input type="radio" name="radio_color" checked> M
+                                    <input type="radio" name="radio_size" checked> M
                                 </label>
                                 <label class="btn btn-light">
-                                    <input type="radio" name="radio_color"> L
+                                    <input type="radio" name="radio_size"> L
                                 </label>
                                 <label class="btn btn-light">
-                                    <input type="radio" name="radio_color"> XL
+                                    <input type="radio" name="radio_size"> XL
                                 </label>
                             </div> 
                         </div>
                     </div> <!-- row.// -->
                     
                     <hr>
-                    <a href="{% url "add_cart" product_id=single_product.id %}" class="btn btn-primary"> <span class="text">Add to cart</span> <i class="fas fa-shopping-cart"></i>  </a>
+                    <a href="{% url 'add_cart' product_id=single_product.id %}" class="btn btn-primary"> <span class="text">Add to cart</span> <i class="fas fa-shopping-cart"></i>  </a>
+                    <a href="{% url 'add_to_list' product_id=single_product.id %}" class="btn btn-success"> <span class="text">Add to Wishlist</span> <i class="fa fa-heart"></i>  </a>
                 </article> <!-- product-info-aside .// -->
             </main> <!-- col.// -->
         </div> <!-- row.// -->
@@ -89,7 +100,7 @@
             </header>
             <article class="box mb-3">
                 <div class="icontext w-100">
-                    <img src="./images/avatars/avatar1.jpg" class="img-xs icon rounded-circle">
+                    <img src="{% static 'images/avatars/avatar1.jpg' %}" class="img-xs icon rounded-circle">
                     <div class="text">
                         <span class="date text-muted float-md-right">24.04.2020 </span>  
                         <h6 class="mb-1">Mike John </h6>
@@ -100,7 +111,7 @@
                         Dummy comment Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
                         tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
                         quis nostrud exercitation ullamco laboris nisi ut aliquip
-                    </p>	
+                    </p>    
                 </div>
             </article>
         </div> <!-- col.// -->
@@ -110,24 +121,62 @@
 </section>
 <!-- ========================= SECTION CONTENT END// ========================= -->
 
+<!-- Swiper CSS -->
+<link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
+
 <style>
 /* CSS for image zoom */
-.img-big-wrap {
+.product-img-wrapper {
     position: relative;
-    display: block;
     overflow: hidden;
+    width: 100%;
+    height: 0;
+    padding-bottom: 75%; /* Adjust this value to control the aspect ratio */
 }
 
-.img-big-wrap img.product-image {
-    display: block;
+.product-img-wrapper .swiper-container {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
-    height: auto;
+    height: 100%;
+}
+
+.product-img-wrapper .swiper-slide {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.product-img-wrapper .product-image {
+    max-width: 100%;
+    max-height: 100%;
     transition: transform 0.5s ease;
 }
 
-.img-big-wrap:hover img.product-image {
-    transform: scale(1.2);
+.product-img-wrapper .swiper-slide:hover .product-image {
+    transform: scale(1.5);
 }
 </style>
+
+<!-- Swiper JS -->
+<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var swiper = new Swiper('.swiper-container', {
+        navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+        },
+        pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+        },
+    });
+});
+</script>
 
 {% endblock %}

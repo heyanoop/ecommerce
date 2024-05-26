@@ -3,6 +3,8 @@ from .models import Cart, Cart_items, Address
 from store.models import product
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 
 # Create your views here.
 def _cart_id(request):
@@ -133,6 +135,7 @@ def add_address(request):
         
         # Redirect the user back to the checkout page
         return redirect('checkout')
+
 
 
 def cart_increase(request, increase_id):

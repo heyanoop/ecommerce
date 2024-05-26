@@ -28,35 +28,32 @@
 
 
 <div class="row">
-	{% for product in products  %}
+	{% for product in products %}
 	<div class="col-md-3">
-		<div class="card card-product-grid">
-			<a href="{% url "product_details" product.category.slug product.slug %}" class="img-wrap"> <img src={{ product.images.url }}> </a>
+		<figure class="card card-product-grid">
+			<div class="img-wrap">
+				{% with product.images.all|first as first_image %}
+				<a href="{{ product.get_url }}"><img src="{{ product.images.first.image.url }}" alt="{{ product.product_name }}"></a>
+				{% endwith %}
+			</div>
 			<figcaption class="info-wrap">
-				<a href="{% url "product_details" product.category.slug product.slug %}" class="title">{{product.product_name}}</a>
-				<div class="price mt-1">{{product.price}}</div> <!-- price-wrap.// -->
+				<div class="fix-height">
+					<a href="{{ product.get_url }}" class="title">{{ product.product_name }}</a>
+					<div class="price-wrap mt-2">
+						<span class="price">{{ product.price }}</span>
+					</div>
+				</div>
 			</figcaption>
-			{% if product.stock <= 0%}
+		</figure>
+		{% if product.stock <= 0%}
 			<h3>Out of stock</h3>
 			{% else %}
 				<a href="{% url "add_cart" product_id=product.id %}" class="btn btn-block btn-success">Add to cart </a>
 			{% endif %}
-		</div>
-		
-	</div> <!-- col.// -->
-{% endfor %}	
-	
-</div> <!-- row.// -->
-
-</div><!-- container // -->
+	</div>
+	{% endfor %}
+</div>
+<!-- ============================ COMPONENT 1 END .// ================================= -->
+</div>
 </section>
 {% endblock %}
-<!-- ========================= SECTION  END// ========================= -->
-
-
-
-
-
-
-</body>
-</html>

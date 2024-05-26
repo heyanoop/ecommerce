@@ -3,11 +3,12 @@ from django.contrib import messages
 from accounts.models import account
 from store.models import product
 from categories.models import category
-from store.models import product
+from store.models import product, ProductImage
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 from django.utils.text import slugify
 from orders.models import Order, OrderProduct
+import os
 
 def admin_required(view_func):
     def _wrapped_view_func(request, *args, **kwargs):
@@ -104,42 +105,48 @@ def user_edit(request, user_id):
 @never_cache
 @admin_required
 def edit_product(request, product_id):
-    instance = product.objects.get(id=product_id)
+    instance = get_object_or_404(product, id=product_id)
     category_instance = category.objects.all()
+    images = ProductImage.objects.filter(product=instance)
+    
     if request.method == 'POST':
         product_name = request.POST.get('product_name')
         description = request.POST.get('description')
         price = request.POST.get('price')
-        image = request.FILES.get('image')
         category_list = request.POST.get('category_dropdown')
         stock = request.POST.get('stock')
         
-        category_inst = category.objects.get(id=category_list)
-        
-        
-        
-        if product.objects.filter(product_name=product_name).exists():
-            messages.error(request, "A product with this name already exists. Please choose a different name.")
-        
-        else:
+        category_inst = get_object_or_404(category, id=category_list)
+
         # Update the instance with the new data
-            instance.product_name = product_name
-            instance.description = description
-            instance.price = price
-            instance.category = category_inst
-            instance.stock  = stock
-            if image:
-                instance.images = image
-            
+        instance.product_name = product_name
+        instance.description = description
+        instance.price = price
+        instance.category = category_inst
+        instance.stock = stock
+        
+        prod_images = [request.FILES.get('image1'), request.FILES.get('image2'), request.FILES.get('image3')]
+        
+        if all(prod_images) and len(prod_images) == 3:
+            Prod_oldImages = ProductImage.objects.filter(product=instance)
+            Prod_oldImages.delete()
+            for image in prod_images:
+                if image:
+                    ProductImage.objects.create(product=instance, image=image)
             instance.save()
-            
-            return redirect('product_list')
+            messages.success(request, "Product updated successfully")
+        else:
+            messages.error(request, "3 images required")
+            return redirect("edit_product", product_id=instance.id)
+        return redirect('edit_product', product_id=instance.id)
 
     context = {
         'instance': instance,
-        'category_instance' : category_instance,
+        'category_instance': category_instance,
+        'images': images,
     }
     return render(request, 'myadmin/home/edit_product.html', context)
+
 
 @login_required
 @never_cache

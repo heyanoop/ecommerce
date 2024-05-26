@@ -40,7 +40,11 @@
 	
 	<td>
 		<figure class="itemside align-items-center">
-			<div class="aside"><img src="{{item.product.images.url}}" class="img-sm"></div>
+			<div class="aside">
+				{% with item.images.all|first as first_image %}
+				<img src="{{ item.product.images.first.image.url }}" class="img-sm">
+				{% endwith %}
+			</div>
 			<figcaption class="info">
 				<a href="{{item.product.get_url}}" class="title text-dark">{{item.product}}</a>
 			</figcaption>

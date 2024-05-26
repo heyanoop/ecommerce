@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404,redirect
-from .models import product
+from .models import product, ProductImage
 from categories.models import category
 from django.db.models import Q
 from django.core.paginator import Paginator
@@ -7,6 +7,7 @@ from django.core.paginator import Paginator
 def store(request, category_slug=None):
     categories = None
     products = None
+    images = None
     sort_by = request.GET.get('sort_by')
     
     if category_slug:
@@ -20,6 +21,9 @@ def store(request, category_slug=None):
     elif sort_by == 'price':
         products = products.order_by('price')
 
+    # Retrieve images related to the filtered products
+    images = ProductImage.objects.filter(product__in=products)
+    
     paginator = Paginator(products, 6)
     page_number = request.GET.get('page')
     paged_products = paginator.get_page(page_number)
@@ -28,18 +32,20 @@ def store(request, category_slug=None):
     context = {
         'products': paged_products,
         'product_count': product_count,
+        'images': images
     }
     return render(request, 'store/store.html', context)
-
 
 def product_details(request, category_slug, product_slug):
     single_product = get_object_or_404(product, category__slug=category_slug, slug=product_slug)
     
     single_product.views += 1
     single_product.save()
+    product_images = ProductImage.objects.filter(product=single_product)
     
     context = {
-        'single_product': single_product
+        'single_product': single_product,
+        'product_images': product_images,
     }
 
     return render(request, 'store/product_details.html', context)
