@@ -1,0 +1,118 @@
+{% extends 'myadmin/layouts/base.html' %}
+{% load static %}
+
+{% block title %} Sales Report {% endblock title %}
+
+{% block content %}
+<div class="container-fluid mt--6">
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header border-0">
+                    <h3 class="mb-0">Sales Report</h3>
+                    <form method="GET" action="{% url 'sales_report' %}" class="form-inline">
+                        <div class="form-group">
+                            <label for="start_date">Start Date:</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" value="{{ request.GET.start_date|default:'' }}">
+                        </div>
+                        <div class="form-group ml-3">
+                            <label for="end_date">End Date:</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" value="{{ request.GET.end_date|default:'' }}">
+                        </div>
+                        <button type="submit" class="btn btn-primary ml-3">Filter</button>
+                        <button type="button" class="btn btn-info ml-3" onclick="generatePDF()">Download PDF</button>
+                    </form>
+                </div>
+                <div class="table-responsive">
+                    <table id="sales-table" class="table align-items-center table-flush">
+                        <thead class="thead-light">
+                            <tr>
+                                <th scope="col" class="sort" data-sort="order_id">Order ID</th>
+                                <th scope="col" class="sort" data-sort="user">User</th>
+                                <th scope="col" class="sort" data-sort="order_date">Order Date</th>
+                                <th scope="col" class="sort" data-sort="payment_method">Payment Method</th>
+                                <th scope="col" class="sort" data-sort="total_amount">Total Amount</th>
+                                <th scope="col" class="sort" data-sort="coupon_used">Coupon Used</th>
+                                <th scope="col" class="sort" data-sort="coupon_discount">Coupon Discount</th>
+                            </tr>
+                        </thead>
+                        <tbody class="list">
+                            {% for order in order_details %}
+                            <tr>
+                                <td class="order_id">
+                                    {{ order.id }}
+                                </td>
+                                <td class="user">
+                                    {{ order.user.first_name }} {{ order.user.last_name }}
+                                </td>
+                                <td class="order_date">
+                                    {{ order.created_at }}
+                                </td>
+                                <td class="payment_method">
+                                    {{ order.payment_method }}
+                                </td>
+                                <td class="total_amount">
+                                    ₹{{ order.order_total }}
+                                </td>
+                                <td class="coupon_used">
+                                    {% if order.coupon_used %}
+                                        {{ order.coupon_used }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td class="coupon_discount">
+                                    {% if order.coupon_used %}
+                                        {{ order.discount_price }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+<script>
+    function generateReport() {
+        const startDate = document.getElementById('start_date').value;
+        const endDate = document.getElementById('end_date').value;
+        const url = `{% url 'generate_sales_report' %}?start_date=${startDate}&end_date=${endDate}`;
+        window.location.href = url;
+    }
+
+    async function generatePDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        doc.text('Sales Report', 10, 10);
+
+        const table = document.getElementById('sales-table');
+        let data = [];
+        const rows = table.querySelectorAll('tr');
+        rows.forEach((row, i) => {
+            let rowData = [];
+            const cells = row.querySelectorAll('th, td');
+            cells.forEach(cell => {
+                rowData.push(cell.innerText);
+            });
+            data.push(rowData);
+        });
+
+        const startY = 20;
+        doc.autoTable({
+            head: [data[0]],
+            body: data.slice(1),
+            startY: startY
+        });
+
+        doc.save('sales_report.pdf');
+    }
+</script>

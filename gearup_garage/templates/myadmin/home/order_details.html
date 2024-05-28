@@ -33,6 +33,8 @@
                                 <option value="PENDING" {% if order_details.status == 'PENDING' %} selected {% endif %}>Pending</option>
                                 <option value="CONFIRMED" {% if order_details.status == 'CONFIRMED' %} selected {% endif %}>Confirmed</option>
                                 <option value="SHIPPED" {% if order_details.status == 'SHIPPED' %} selected {% endif %}>Shipped</option>
+                                <option value="DELIVERED" {% if order_details.status == 'DELIVERED' %} selected {% endif %}>Deliveded</option>
+                                <option value="RETURN" {% if order_details.status == 'RETURN' %} selected {% endif %}>Return</option>
                                 <option value="CANCELLED" {% if order_details.status == 'CANCELLED' %} selected {% endif %}>Cancelled</option>
                                 <!-- Add more status options as needed -->
                             </select>
@@ -95,12 +97,12 @@
                         <img alt="Image placeholder" src="{% static '/assets/img/theme/bootstrap.jpg' %}">
                       </a>
                       <div class="media-body"><a href = "">
-                        <span class="name mb-0 text-sm">{{order.user.first_name}}</span>
+                        <span class="name mb-0 text-sm">{{order.product}}</span>
                       </div>
                     </div>
                   </th>
                   <td class="budget">
-                    {{order.product}}
+                    {{order.quantity}}
                   </td>
                   <td class="budget">
                     {{order.Order.status}}

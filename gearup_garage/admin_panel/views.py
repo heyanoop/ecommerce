@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse
 from django.contrib import messages
 from accounts.models import account
 from store.models import product
@@ -9,6 +10,9 @@ from django.views.decorators.cache import never_cache
 from django.utils.text import slugify
 from orders.models import Order, OrderProduct
 import os
+from coupon.models import Coupon
+from datetime import datetime
+import pytz
 
 def admin_required(view_func):
     def _wrapped_view_func(request, *args, **kwargs):
@@ -174,37 +178,40 @@ def edit_category(request, category_id):
 @admin_required
 def add_product(request):
     category_instance = category.objects.all()
-    
+
     if request.method == 'POST':
         product_name = request.POST.get('product_name')
-        description = request.POST.get('description')
         price = request.POST.get('price')
-        image = request.FILES.get('image')
-        category_id = request.POST.get('category_dropdown')
         stock = request.POST.get('stock')
-
-        # Generate slug
+        description = request.POST.get('description')
+        category_id = request.POST.get('category_dropdown')
+        category_inst = get_object_or_404(category, id=category_id)
         slug = slugify(product_name)
 
-        if product.objects.filter(product_name=product_name).exists():
-            messages.error(request, "A product with this name already exists. Please choose a different name.")
+        # Create the product instance
+        product_instance = product.objects.create(
+            product_name=product_name,
+            slug=slug,
+            price=price,
+            stock=stock,
+            description=description,
+            category=category_inst
+        )
+
+        # Handle multiple image uploads
+        prod_images = [request.FILES.get('image1'), request.FILES.get('image2'), request.FILES.get('image3')]
+        
+        if all(prod_images) and len(prod_images) == 3:
+            for image in prod_images:
+                if image:
+                    ProductImage.objects.create(product=product_instance, image=image)
+            messages.success(request, "Product added successfully")
         else:
-           
-            new_product = product.objects.create(
-                product_name=product_name,
-                description=description,
-                price=price,
-                stock=stock,
-                slug=slug,
-                category_id=category_id
-            )
+            product_instance.delete()  # Delete the product instance if not all images are provided
+            messages.error(request, "3 images are required")
+            return redirect('add_product')
 
-            if image:
-                new_product.images = image
-                new_product.save()
-
-            messages.success(request, "Product added successfully.")
-            return redirect('product_list')
+        return redirect('add_product')
 
     context = {
         'category_instance': category_instance,
@@ -344,3 +351,76 @@ def update_order_status(request, status_id):
             
         order.save()
         return redirect('order_details', order_id=status_id)
+
+@login_required
+@admin_required
+def coupon_manager(request):
+    coupons = Coupon.objects.all().order_by('-valid_until')
+    context = {
+        'coupons': coupons
+    }
+    return render(request, 'myadmin/home/coupon.html', context)
+
+@login_required
+@admin_required
+def add_coupon(request):
+    if request.method == 'POST':
+        code = request.POST.get('coupon_code')
+        discount = request.POST.get('discount')
+        date_from = request.POST.get('date_from')
+        expiry_date = request.POST.get('expiry_date')
+
+        if not code or not discount or not date_from or not expiry_date:
+            messages.error(request, 'All fields are required.')
+            return redirect('add_coupon')
+
+        try:
+            discount = int(discount)
+            if discount < 1 or discount > 70:
+                messages.error(request, 'Discount must be between 1 and 70.')
+                return redirect('add_coupon')
+
+            date_from = datetime.strptime(date_from, '%Y-%m-%d').replace(tzinfo=pytz.UTC)
+            expiry_date = datetime.strptime(expiry_date, '%Y-%m-%d').replace(tzinfo=pytz.UTC)
+
+            if date_from >= expiry_date:
+                messages.error(request, 'Expiry date must be after the start date.')
+                return redirect('add_coupon')
+
+        except ValueError:
+            messages.error(request, 'Invalid data format.')
+            return redirect('add_coupon')
+
+        coupon = Coupon(code=code, discount=discount, valid_from=date_from, valid_until=expiry_date)
+        coupon.save()
+        messages.success(request, 'Coupon added successfully.')
+        return redirect('add_coupon')
+
+    return render(request, 'myadmin/home/add_coupon.html')
+
+@login_required
+def toggle_coupon_active(request, coupon_id):
+    coupon = get_object_or_404(Coupon, id=coupon_id)
+    if request.method == 'POST':
+        is_active = request.POST.get('is_active') == 'True'
+        coupon.is_active = is_active
+        coupon.save()
+    return redirect('coupon')
+
+def sales_report(request):
+    orders = Order.objects.filter(status = 'DELIVERED')
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    if start_date:
+        orders = orders.filter(created_at__date__gte=start_date)
+    if end_date:
+        orders = orders.filter(created_at__date__lte=end_date)
+
+    context = {
+        'order_details': orders,
+        'start_date': start_date,
+        'end_date': end_date,
+    }
+
+    return render(request, 'myadmin/home/sales_report.html', context)

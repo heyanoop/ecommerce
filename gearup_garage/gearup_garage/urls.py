@@ -28,5 +28,8 @@ urlpatterns = [
     path('cart/', include('cart.urls')),
     path('dashboard/', include('user_dashboard.urls')),
     path('orders/', include('orders.urls',)),
-    path('wishlist/',include('wishlist.urls'))
+    path('wishlist/',include('wishlist.urls')),
+    path('coupon/', include('coupon.urls')),
+    path('payment_gateway/', include('payment_gateway.urls'))
+    
 ]+ static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

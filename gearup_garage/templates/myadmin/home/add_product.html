@@ -1,6 +1,8 @@
 {% extends 'myadmin/layouts/base.html' %}
 {% load static %}
-{% block title %} Add Product {% endblock title %}
+
+
+{% block title %} Edit Product {% endblock title %}
 
 {% block content %}
 {% if messages %}
@@ -16,7 +18,6 @@
     </div>
 </div>
 {% endif %}
-
 <div class="col-xl-8 order-xl-1">
     <div class="card">
         <div class="card-header">
@@ -36,43 +37,24 @@
                         <div class="col-lg-6">
                             <div class="form-group">
                                 <label for="input-product-name">Product Name</label>
-                                <input type="text" id="input-product-name" class="form-control" placeholder="Product name" name="product_name" required minlength="2" maxlength="255">
-                                <small class="text-muted">2 to 255 characters</small>
+                                <input type="text" id="input-product-name" class="form-control" placeholder="Product name" name="product_name" required>
+                                <span id="name-validation-msg" class="text-danger"></span>
                             </div>
                         </div>
-                        <!-- Slug -->
-                        <div class="col-lg-6">
-                            <div class="form-group">
-                                <label for="input-slug">Slug</label>
-                                <input type="text" id="input-slug" class="form-control" placeholder="Slug" name="slug" readonly>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
                         <!-- Price -->
-                        <div class="col-lg-4">
+                        <div class="col-lg-3">
                             <div class="form-group">
                                 <label for="input-price">Price</label>
-                                <input type="number" id="input-price" class="form-control" placeholder="Price" name="price" required min="0" step="0.01">
+                                <input type="number" id="input-price" class="form-control" placeholder="Price" name="price" min="1" required>
+                                <span id="price-validation-msg" class="text-danger"></span>
                             </div>
                         </div>
                         <!-- Stock -->
-                        <div class="col-lg-4">
+                        <div class="col-lg-3">
                             <div class="form-group">
                                 <label for="input-stock">Stock</label>
-                                <input type="number" id="input-stock" class="form-control" placeholder="Stock" name="stock" required min="0">
-                            </div>
-                        </div>
-                        <!-- Category Dropdown -->
-                        <div class="col-lg-4">
-                            <div class="form-group">
-                                <label for="category-dropdown">Category</label>
-                                <select class="form-control" id="category-dropdown" name="category_dropdown" required>
-                                    <option value="">Select Category</option>
-                                    {% for category in category_instance %}
-                                        <option value="{{ category.id }}">{{ category.category_name }}</option>
-                                    {% endfor %}
-                                </select>
+                                <input type="number" id="input-stock" class="form-control" placeholder="Stock"  name="stock" min="0" required>
+                                <span id="stock-validation-msg" class="text-danger"></span>
                             </div>
                         </div>
                     </div>
@@ -80,102 +62,97 @@
                     <div class="col-lg-12">
                         <div class="form-group">
                             <label class="form-control-label">Description</label>
-                            <textarea rows="4" class="form-control" placeholder="Description" name="description" required></textarea>
+                            <textarea rows="4" class="form-control" placeholder="Description" name="description"> </textarea>
                         </div>
                     </div>
-                    <!-- Image -->
+                    <!-- Image Uploads with Current Image on Top, in a Single Line -->
                     <div class="col-lg-12">
-                        <div class="form-group">
-                            <label class="form-control-label">Product Image</label>
-                            <input type="file" id="id_image" class="form-control-file" name="image" required accept="image/*">
-                        </div>
-                        <div class="form-group">
-                            <div class="img-container">
-                                <img id="image_preview" class="img-fluid" src="" alt="Image Preview">
+                        <div class="form-group d-flex justify-content-between">
+                            <div class="text-center mr-2">
+                               
+                                <input type="file" class="form-control-file" name="image1" accept="image/jpeg, image/png" id="image-input-1">
+                                <span id="image-validation-msg-1" class="text-danger"></span>
+                            </div>
+                            <div class="text-center mr-2">
+                                <input type="file" class="form-control-file" name="image2" accept="image/jpeg, image/png" id="image-input-2">
+                                <span id="image-validation-msg-2" class="text-danger"></span>
+                            </div>
+                            <div class="text-center">
+                                
+                                <input type="file" class="form-control-file" name="image3" accept="image/jpeg, image/png" id="image-input-3">
+                                <span id="image-validation-msg-3" class="text-danger"></span>
                             </div>
                         </div>
+                    </div>
+                    <!-- Category Dropdown -->
+                    <div class="col-lg-12">
                         <div class="form-group">
-                            <input type="hidden" id="id_x" name="x" />
-                            <input type="hidden" id="id_y" name="y" />
-                            <input type="hidden" id="id_width" name="width" />
-                            <input type="hidden" id="id_height" name="height" />
+                            <label for="category-dropdown">Category</label>
+                            <select class="form-control" id="category-dropdown" name="category_dropdown" required>
+                                <option value="">Select</option>
+                                {% for category in category_instance %}
+                                    <option value="{{ category.id }}"{% if category.id == instance.category.id %}selected{% endif %}>{{ category.category_name }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
                     </div>
-                    <!-- Add more options as needed -->
                     <hr class="my-4" />
-                    <!-- Add Button -->
                     <div class="col-4 text-center">
                         <button type="submit" class="btn btn-sm btn-success btn-block">Add Product</button>
                     </div>
-                </div>
             </form>
         </div>
     </div>
 </div>
 
 {% include "includes/footer.html" %}
-
-{% endblock content %}
+{% endblock %}
 
 <!-- Specific JS goes HERE -->
 {% block javascripts %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropper/4.1.0/cropper.min.js"></script>
 <script>
-    // Generate slug based on the product name
-    function slugify(text) {
-        return text.toString().toLowerCase()
-            .replace(/\s+/g, '-')           // Replace spaces with -
-            .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
-            .replace(/\-\-+/g, '-')         // Replace multiple - with single -
-            .replace(/^-+/, '')             // Trim - from start of text
-            .replace(/-+$/, '');            // Trim - from end of text
-    }
+    $(document).ready(function() {
+        $('#edit-product-form').submit(function(event) {
+            var valid = true;
+            
+            // Validate product name
+            var productName = $('#input-product-name').val().trim();
+            if (productName === '') {
+                $('#name-validation-msg').text('Product name is required.');
+                valid = false;
+            }
 
-    // Update slug field based on product name
-    document.getElementById('input-product-name').addEventListener('keyup', function() {
-        var productName = document.getElementById('input-product-name').value;
-        var slug = slugify(productName);
-        document.getElementById('input-slug').value = slug;
-    });
+            // Validate price
+            var price = $('#input-price').val().trim();
+            if (price === '') {
+                $('#price-validation-msg').text('Price is required.');
+                valid = false;
+            }
 
-    // Image Cropper and File Type Validation
-    var $image = document.getElementById('image_preview');
-    var cropBoxData;
-    var canvasData;
-    var cropper;
+            // Validate stock
+            var stock = $('#input-stock').val().trim();
+            if (stock === '') {
+                $('#stock-validation-msg').text('Stock is required.');
+                valid = false;
+            }
 
-    $('#id_image').on('change', function() {
-        var reader = new FileReader();
-        var file = this.files[0];
+            // Validate image files
+            var allowedExtensions = /(\.jpg|\.jpeg|\.png)$/i;
+            for (var i = 1; i <= 3; i++) {
+                var imageInput = $('#image-input-' + i);
+                var imageFile = imageInput.get(0).files[0];
+                if (imageFile && !allowedExtensions.exec(imageFile.name)) {
+                    $('#image-validation-msg-' + i).text('Please upload a valid image file (JPG, JPEG, or PNG).');
+                    valid = false;
+                }
+            }
 
-        // Validate file type
-        if (!file.type.match('image/jpeg') && !file.type.match('image/png')) {
-            alert('Please select a JPG or PNG file.');
-            $('#id_image').val(''); // Clear the file input field
-            return;
-        }
-
-        // Continue with file reading and cropper initialization
-        reader.onload = function(e) {
-            $image.src = e.target.result;
-            initCropper();
-        }
-        reader.readAsDataURL(file);
-    });
-
-    function initCropper() {
-        cropper = new Cropper($image, {
-            aspectRatio: 430 / 360,
-            crop: function(event) {
-                cropBoxData = cropper.getCropBoxData();
-                canvasData = cropper.getCanvasData();
-                document.getElementById('id_x').value = cropBoxData.left;
-                document.getElementById('id_y').value = cropBoxData.top;
-                document.getElementById('id_width').value = cropBoxData.width;
-                document.getElementById('id_height').value = cropBoxData.height;
-            },
+            if (!valid) {
+                event.preventDefault();
+            }
         });
-    }
+    });
 </script>
 {% endblock javascripts %}

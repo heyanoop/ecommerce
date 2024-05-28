@@ -45,7 +45,8 @@ INSTALLED_APPS = [
     'user_dashboard',
     'orders',
     'wishlist',
-    'offer'
+    'coupon',
+    'payment_gateway',
 
 ]
 
@@ -166,3 +167,7 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER =  'anooptvz@gmail.com'
 EMAIL_HOST_PASSWORD = 'ivnb ssse tjkt lfek'
 EMAIL_USE_TLS = True
+
+#PAYMENT GATEWAY SETTINGS
+RAZORPAY_KEY_ID = 'rzp_test_z9Zk1Kzr1QlpyW'
+RAZORPAY_KEY_SECRET = 'IPWEFlPjTeMxDGZ1DRlr3GFp'

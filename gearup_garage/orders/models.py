@@ -2,7 +2,7 @@ from django.db import models
 from accounts.models import account
 from cart.models import Address
 from store.models import product
-
+from coupon.models import Coupon
 # Create your models here.
 class Payment(models.Model):
     user = models.ForeignKey(account, on_delete=models.CASCADE)
@@ -19,6 +19,7 @@ class Order(models.Model):
         ('PENDING', 'pending'),
         ('CONFIRMED', 'confirmed'),
         ('SHIPPED', 'shipped'),
+        ('DELIVERED', 'Delivered'),
         ('CANCELLED', 'cancelled'),
         ('RETURN', 'return')
                     
@@ -45,6 +46,15 @@ class Order(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     address_type = models.CharField(max_length= 20)
     is_ordered=models.BooleanField(default=False)
+    original_price = models.IntegerField(default=0)
+    discount_price = models.IntegerField(default=0, null=True, blank=True)
+    coupon_used = models.ForeignKey(Coupon, on_delete=models.SET_NULL, null=True, blank=True)
+    payment_status = models.CharField(max_length=20, default='PENDING')
+    payment_method = models.CharField(max_length=20, default='CASH ON DELIVERY') 
+    razorpay_order_id = models.CharField(max_length=200, null=True, blank=True)
+    razorpay_payment_id = models.CharField(max_length=200, null=True, blank=True)
+    razorpay_signature = models.CharField(max_length=200, null=True, blank=True)
+    
     def __str__(self):
         return self.first_name
     
