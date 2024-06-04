@@ -54,10 +54,11 @@ def cartitems(request):
         cart = Cart.objects.create(cart_id = _cart_id(request))
         cart.save()
         
-   
+    
     cart_items = Cart_items.objects.filter(cart=cart).order_by('-added_time')
     total_price = sum(item.product.price * item.quantity for item in cart_items)
     tax = (total_price * 0.2)
+    
     
     discount = 0
     coupon_code = request.session.get('coupon_code')

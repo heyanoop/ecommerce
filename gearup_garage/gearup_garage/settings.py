@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'wishlist',
     'coupon',
     'payment_gateway',
+    'offer_management'
 
 ]
 

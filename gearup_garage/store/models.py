@@ -1,6 +1,7 @@
 from django.db import models
 from categories.models import category
 from django.urls import reverse
+from django.apps import apps
 
 class product(models.Model):
     product_name = models.CharField(max_length=200, unique=True)
@@ -13,7 +14,19 @@ class product(models.Model):
     created_date = models.DateTimeField(auto_now_add=True)
     modified_date = models.DateTimeField(auto_now=True)
     views = models.IntegerField(default=0)
-
+    old_price = models.IntegerField(null = True, blank = True)
+    
+     
+    def get_product_offer(self):
+        ProductOffer = apps.get_model('offer_management', 'product_offer')
+        product_offers = ProductOffer.objects.filter(product=self, is_active=True).first()
+        return product_offers.discount if product_offers else 0
+    
+    def get_category_discount(self):
+       CategoryOffer = apps.get_model('offer_management', 'category_offer')
+       category_offers = CategoryOffer.objects.filter(category=self.category, is_active=True).first()
+       return category_offers.discount if category_offers else 0
+    
     def get_url(self):
         return reverse('product_details', args=[self.category.slug, self.slug])
 

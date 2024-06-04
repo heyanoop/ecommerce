@@ -13,6 +13,7 @@ import os
 from coupon.models import Coupon
 from datetime import datetime
 import pytz
+from offer_management.models import category_offer, product_offer
 
 def admin_required(view_func):
     def _wrapped_view_func(request, *args, **kwargs):
@@ -407,6 +408,7 @@ def toggle_coupon_active(request, coupon_id):
         coupon.save()
     return redirect('coupon')
 
+@login_required
 def sales_report(request):
     orders = Order.objects.filter(status = 'DELIVERED')
     start_date = request.GET.get('start_date')
@@ -424,3 +426,155 @@ def sales_report(request):
     }
 
     return render(request, 'myadmin/home/sales_report.html', context)
+
+
+def cat_offer(request):
+    all_offers = category_offer.objects.all()
+    context = {
+        'all_offers': all_offers
+    }
+    return render(request, 'myadmin/home/offer_module_cat.html', context)
+
+def prod_offer(request):
+    all_offers = product_offer.objects.all()
+    context = {
+        'all_offers':all_offers
+    }
+    return render(request,  'myadmin/home/offer_module_prod.html', context)
+
+
+def add_product_offer(request):
+    product_list = product.objects.all()
+    if request.method == 'POST':
+        product_id = request.POST.get('product')
+        valid_from = request.POST.get('date_from')
+        valid_until = request.POST.get('expiry_date')
+        discount = request.POST.get('discount')
+        
+        valid_from = datetime.strptime(valid_from, '%Y-%m-%d').replace(tzinfo=pytz.UTC)
+        valid_until = datetime.strptime(valid_until, '%Y-%m-%d').replace(tzinfo=pytz.UTC)
+
+        try:
+            selected_product = product.objects.get(id=product_id)
+            
+            # Check if the product is part of any active category offer
+            active_category_offers = category_offer.objects.filter(
+                category=selected_product.category,
+                valid_from__lte=valid_until,
+                valid_until__gte=valid_from
+            )
+            if active_category_offers.exists():
+                messages.error(request, 'This product is part of an active category offer.')
+                return redirect('add_product_offer')
+            
+            # Create product offer
+            product_off = product_offer.objects.create(
+                product=selected_product,
+                valid_from=valid_from,
+                valid_until=valid_until,
+                discount=discount
+            )
+            product_off.save()
+
+            # Update product price and old price
+            selected_product.old_price = selected_product.price
+            selected_product.price = selected_product.price - (selected_product.price * (int(discount) / 100))
+            selected_product.save()
+
+            messages.success(request, 'Product offer added successfully and product price updated.')
+            return redirect('add_product_offer')
+        except Exception as e:
+            messages.error(request, 'Error adding product offer: ' + str(e))
+
+    context = {
+        'product_list': product_list
+    }
+    
+    return render(request, 'myadmin/home/add_product_offer.html', context)
+
+def add_category_offer(request):
+    category_list = category.objects.all()
+    if request.method == 'POST':
+        category_id = request.POST.get('category')
+        discount = request.POST.get('discount')
+        valid_from = request.POST.get('date_from')
+        valid_until = request.POST.get('expiry_date')
+        
+        valid_from = datetime.strptime(valid_from, '%Y-%m-%d').replace(tzinfo=pytz.UTC)
+        valid_until = datetime.strptime(valid_until, '%Y-%m-%d').replace(tzinfo=pytz.UTC)
+
+        try:
+            selected_category = category.objects.get(id=category_id)
+            
+            # Check if any product in this category has an active product offer
+            active_product_offers = product_offer.objects.filter(
+                product__category=selected_category,
+                valid_from__lte=valid_until,
+                valid_until__gte=valid_from
+            )
+            if active_product_offers.exists():
+                messages.error(request, 'There are active product offers in this category.')
+                return redirect('add_category_offer')
+            
+            # Create category offer
+            category_off = category_offer.objects.create(
+                category=selected_category,
+                discount=discount,
+                valid_from=valid_from,
+                valid_until=valid_until
+            )
+            category_off.save()
+
+            # Update price for all products in the category
+            products_in_category = product.objects.filter(category=selected_category)
+            for prod in products_in_category:
+                prod.old_price = prod.price
+                prod.price = prod.price - (prod.price * (int(discount) / 100))
+                prod.save()
+
+            messages.success(request, 'Category offer added successfully and product prices updated.')
+            return redirect('add_category_offer')
+        except Exception as e:
+            messages.error(request, 'Error adding category offer: ' + str(e))
+
+    context = {
+        'category_list': category_list
+    }
+    return render(request, 'myadmin/home/add_category_offer.html', context)
+
+
+def delete_category_offer(request, offer_id):
+    try:
+        category_off = get_object_or_404(category_offer, id=offer_id)
+
+        products_in_category = product.objects.filter(category=category_off.category)
+        for prod in products_in_category:
+            if prod.old_price:
+                prod.price = prod.old_price
+                prod.old_price = 0
+                prod.save()
+
+        category_off.delete()
+
+        messages.success(request, 'Category offer deleted successfully and product prices updated.')
+    except Exception as e:
+        messages.error(request, 'Error deleting category offer: ' + str(e))
+
+    return redirect('category_offer')
+
+def delete_product_offer(request, offer_id):
+    try:
+        product_off = get_object_or_404(product_offer, id=offer_id)
+
+        if product_off.product.old_price:
+            product_off.product.price = product_off.product.old_price
+            product_off.product.old_price = 0
+            product_off.product.save()
+
+        product_off.delete()
+
+        messages.success(request, 'Product offer deleted successfully and product price updated.')
+    except Exception as e:
+        messages.error(request, 'Error deleting product offer: ' + str(e))
+
+    return redirect('product_offer')

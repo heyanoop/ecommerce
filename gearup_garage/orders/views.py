@@ -26,36 +26,39 @@ from django.utils.decorators import method_decorator
 
 razorpay_client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
-@login_required
 def place_order(request):
     if request.method == 'POST':
         address_id = request.POST.get('address')
         payment_method = request.POST.get('payment_method')
         selected_address = Address.objects.get(id=address_id)
         cart = Cart.objects.get(cart_id=_cart_id(request))
-        cart_items = Cart_items.objects.filter(cart=cart)  
-        #order_total = sum(item.product.price * item.quantity for item in cart_items)
-        #tax = order_total * 2 / 100
+        cart_items = Cart_items.objects.filter(cart=cart)
         
         coupon_code = request.session.get('coupon_code')
         original_price = request.session.get('original_price')
         tax = original_price * 0.2
-    
+        
+        if original_price > 1000 and payment_method == 'cash on Delivery':
+            messages.error(request, 'Orders above 1000 are not allowed for cash on delivery')
+            return redirect('cart')
+        
         if coupon_code:
-            coupon = Coupon.objects.get(code=coupon_code, is_active=True)
-            coupon_discount = request.session.get('coupon_discount')
-            print(coupon, coupon_code, coupon_discount)
-            final_price = original_price - coupon_discount + tax
+            try:
+                coupon = Coupon.objects.get(code=coupon_code, is_active=True)
+                coupon_discount = request.session.get('coupon_discount')
+                final_price = original_price - coupon_discount + tax
+            except Coupon.DoesNotExist:
+                messages.error(request, 'Invalid or inactive coupon code')
+                return redirect('cart')
         else:
             final_price = original_price + tax
             coupon_discount = None
             coupon = None
-        
+
         for cart_item in cart_items:
             if cart_item.quantity > cart_item.product.stock:
                 messages.error(request, f"Sorry, {cart_item.product.product_name} is out of stock.")
-                return redirect('cart')  # Redirect back to the cart page if there is insufficient stock
-
+                return redirect('cart')
 
         # Create order
         order = Order.objects.create(
@@ -72,15 +75,13 @@ def place_order(request):
             city=selected_address.city,
             ip=request.META.get('REMOTE_ADDR'),
             address_type=selected_address.address_type,
-            payment_method = payment_method,
+            payment_method=payment_method,
             order_total=final_price,
-            original_price = original_price,
-            discount_price = coupon_discount,
+            original_price=original_price,
+            discount_price=coupon_discount,
             tax=tax,
             is_ordered=True,
-            coupon_used = coupon,
-            
-            
+            coupon_used=coupon,
         )
         request.session['order_id'] = order.id
 
@@ -93,45 +94,36 @@ def place_order(request):
         )
 
         if payment_method == 'debit_card':
-            order = Order.objects.get(id = order.id )
-            if order.razorpay_order_id is None:
+            if not order.razorpay_order_id:
                 order_currency = 'INR'
-                print('before')
-                notes = {'order-type':"basic order from the website"}
+                notes = {'order-type': "basic order from the website"}
                 receipt_maker = str(order.id)
-                    
                 razorpay_order = razorpay_client.order.create(dict(
-                amount=order.order_total*100,
-                currency=order_currency,
-                notes=notes,
-                receipt=receipt_maker,
-                payment_capture='1'  # Ensure this line is inside the dictionary
-                ))  
-                print('after')
-                print(razorpay_order['id'])
+                    amount=int(order.order_total * 100),
+                    currency=order_currency,
+                    notes=notes,
+                    receipt=receipt_maker,
+                    payment_capture='1'
+                ))
                 order.razorpay_order_id = razorpay_order['id']
-                print(order.razorpay_order_id, order.id)
                 order.save()
-            total_amount =order.order_total*100
-            callback_url = 'http://'+str(get_current_site(request))+"/payment_gateway/handlerequest/"
-            print(callback_url)
             
-            
-                
-            context ={
-                'order':order,
-                'razorpay_order_id':order.razorpay_order_id,
-                'order_id':order.id,
-                'total_amount':total_amount,
+            total_amount = order.order_total * 100
+            callback_url = 'http://' + str(get_current_site(request)) + "/payment_gateway/handlerequest/"
+
+            context = {
+                'order': order,
+                'razorpay_order_id': order.razorpay_order_id,
+                'order_id': order.id,
+                'total_amount': total_amount,
                 'total_price': total_amount,
-                'razorpay_merchant_id':settings.RAZORPAY_KEY_ID,
-                'callback_url':callback_url
+                'razorpay_merchant_id': settings.RAZORPAY_KEY_ID,
+                'callback_url': callback_url
             }
-            return render(request, 'store/razorpay_gateway.html',context)
-        
+            return render(request, 'store/razorpay_gateway.html', context)
+
         # Create order products and decrease product quantity
         for cart_item in cart_items:
-            # Decrease product quantity
             cart_item.product.stock -= cart_item.quantity
             cart_item.product.save()
 
@@ -146,9 +138,7 @@ def place_order(request):
 
         # Delete cart items after order is placed
         cart_items.delete()
-        
-          
 
-        return render(request,'store/order_placed.html')
+        return render(request, 'store/order_placed.html')
     else:
         return render(request, 'error.html', {'message': 'Invalid request method'})

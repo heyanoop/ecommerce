@@ -42,10 +42,22 @@ def product_details(request, category_slug, product_slug):
     single_product.views += 1
     single_product.save()
     product_images = ProductImage.objects.filter(product=single_product)
+    cat_offer = single_product.get_category_discount()
+    prod_offer = single_product.get_product_offer()
+    if cat_offer == 0 and prod_offer == 0:
+        discount = 0
+    elif cat_offer != 0:
+        discount = cat_offer
+    else:
+        discount = prod_offer
+    
+    
+    
     
     context = {
         'single_product': single_product,
         'product_images': product_images,
+         'discount': discount
     }
 
     return render(request, 'store/product_details.html', context)

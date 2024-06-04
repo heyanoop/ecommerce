@@ -160,3 +160,6 @@ def reset_password(request):
             return redirect('reset_password')
     else:       
         return render(request, 'accounts/reset_password.html')
+    
+    
+    

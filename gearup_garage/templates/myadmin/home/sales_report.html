@@ -20,7 +20,7 @@
                             <input type="date" class="form-control" id="end_date" name="end_date" value="{{ request.GET.end_date|default:'' }}">
                         </div>
                         <button type="submit" class="btn btn-primary ml-3">Filter</button>
-                        <button type="button" class="btn btn-info ml-3" onclick="generatePDF()">Download PDF</button>
+                        <button type="button" class="btn btn-info ml-3 download-pdf-btn">Download PDF</button>
                     </form>
                 </div>
                 <div class="table-responsive">
@@ -79,16 +79,12 @@
 </div>
 {% endblock content %}
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+{% block scripts %}
+<script src="{% static 'js/libs/jspdf.umd.min.js' %}"></script>
+<script src="{% static 'js/libs/jspdf.plugin.autotable.min.js' %}"></script>
 <script>
-    function generateReport() {
-        const startDate = document.getElementById('start_date').value;
-        const endDate = document.getElementById('end_date').value;
-        const url = `{% url 'generate_sales_report' %}?start_date=${startDate}&end_date=${endDate}`;
-        window.location.href = url;
-    }
-
-    async function generatePDF() {
+    function generatePDF() {
+        console.log('generatePDF called');
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
 
@@ -115,4 +111,13 @@
 
         doc.save('sales_report.pdf');
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const downloadPdfBtns = document.querySelectorAll('.download-pdf-btn');
+        console.log('Download PDF buttons:', downloadPdfBtns);
+        downloadPdfBtns.forEach(btn => {
+            btn.addEventListener('click', generatePDF);
+        });
+    });
 </script>
+{% endblock scripts %}
