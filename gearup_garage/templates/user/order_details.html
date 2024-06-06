@@ -10,8 +10,12 @@
                 <article class="card">
                     <header class="card-header">
                         <strong class="d-inline-block mr-3 d-flex justify-content-center">Single order View</strong>
-                        {% if address.status != 'CANCELLED' %}
+                        {% if address.status == 'PENDING' %}
                         <div class="text-right"><a href="{% url "confirm_cancel" id=address.id %}" class="d-inline-block mr-3 btn btn-primary">Cancel Order</a></div>
+                        {% elif address.status == 'DELIVERED'%}
+                        <div class="text-right"><a href="{% url "request_return" id=address.id %}" class="d-inline-block mr-3 btn btn-primary">Return Order</a></div>
+                       {% else %}
+                        <div class="text-right"> {{address.status}} </div>
                         {% endif %}
                     </header>
                     <div class="card-body">
@@ -21,9 +25,12 @@
                                 <div>
                                     <p>Order ID: {{ address.id }}</p>
                                     <p>Billing Name: {{ address.first_name }} {{ address.last_name }}</p>
-                                    <p>Subtotal: {{ address.order_total }}</p>
+                                    <p>Subtotal: {{ address.original_price  }}</p>
+                                    {% if coupon_discount != 0 %}
+                                    <p>Coupon discount: -{{ address.discount_price }}</p>
+                                    {% endif %}
                                     <p>Tax: {{ address.tax }}</p>
-                                    <p>Order Total: ₹{{ final_price }}</p>
+                                    <p>Order Total: ₹{{address.order_total }}</p>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -34,6 +41,11 @@
                                     <p>City: {{ address.city }}</p>
                                     <p>State: {{ address.state }}</p>
                                     <p>Pin Code: {{ address.pincode }}</p>
+                                    {% if address.payment_method == 'debit_card' %}
+                                    {% if address.payment_status == 'PENDING' or address.payment_status == 'Failure' %}
+                                     <a href = "{% url "retry_payment" id=address.id %}"><button type="button" class="btn btn-info">Retry Payment</button></a>
+                                    {% endif %}
+                                    {% endif %}
                                     <!-- Add more address details as needed -->
                                 </div>
                             </div>
@@ -58,6 +70,7 @@
                                         <td class="text-center" scope="row">{{ order.order.created_at }}</td>
                                         <td class="text-center" scope="row">₹{{ order.product_price }}</td>
                                         {% if order.Order.status != 'CANCELLED' %}
+
                                         {% else %}
                                         <td><p class="text-danger">Order Cancelled</p></td>
                                         {% endif %}

@@ -29,6 +29,9 @@ urlpatterns = [
     path('add_category_offer', views.add_category_offer, name = 'add_category_offer'),
     path('delete_category_offer/<int:offer_id>/', views.delete_category_offer, name='delete_category_offer'),
     path('delete_product_offer/<int:offer_id>/', views.delete_product_offer, name='delete_product_offer'),
-       
+    path('approve_return/<int:id>/',views.approve_return, name = 'approve_return' ),
+    path('reject_return/<int:id>/',views.reject_return, name = 'reject_return'),
+    path('init_refund/<int:id>/',views.init_refund, name = 'init_refund' )
+     
     
 ]

@@ -3,8 +3,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from accounts.models import account
 from cart.models import Address
-from orders.models import OrderProduct, Order
+from orders.models import OrderProduct, Order,Payment
 from store.models import product
+from user_dashboard.models import wallet
 from django.contrib.auth import authenticate, logout
 import re
 
@@ -19,7 +20,16 @@ def regular_user_required(view_func):
 @login_required
 @regular_user_required
 def dashboard(request):
-    return render(request, 'user/dashboard.html')
+    user = request.user
+    try:
+        wal = wallet.objects.get(user=user)
+    except wallet.DoesNotExist:
+            wal= wallet(user=user, amount=0)
+    print(wal.amount)
+    context = {
+        'wallet_bal': wal.amount 
+    }
+    return render(request, 'user/dashboard.html', context)
 
 @login_required
 @regular_user_required
@@ -33,7 +43,7 @@ def address_management(request):
 
 @login_required
 @regular_user_required
-def order_management(request):
+def order_management(request): 
     orders = Order.objects.filter(user=request.user).order_by('-created_at')
     context = {
         'all_orders': orders
@@ -45,11 +55,14 @@ def order_management(request):
 def order_details(request, order_id):
     single_order = OrderProduct.objects.filter(order_id=order_id)
     order_address = Order.objects.get(id=order_id)
-    final_price = (order_address.tax)+ (order_address.order_total)
+    coupon = order_address.coupon_used.discount if order_address.coupon_used else 0
+    coupon_discount = order_address.original_price *(coupon/100)
+    
     context ={
         'single_order' : single_order,
         'address' : order_address,
-        'final_price': final_price
+    
+    
     }
     return render(request, 'user/order_details.html', context)
 
@@ -64,28 +77,79 @@ def confirm_cancel(request, id):
     return render(request, 'user/confirm_cancel.html', context)
 
 
+# @login_required
+# @regular_user_required
+# def cancel_order(request, id):
+#     order = get_object_or_404(Order, id=id)
+#     order_product = OrderProduct.objects.filter(order=order)
+    
+    
+#     if order.user != request.user:
+#         return redirect('home')
+    
+#     order.status = 'CANCELLED'
+#     order.is_cancelled = True
+#     order.save()
+    
+#     for product in order_product:
+#         product.is_cancelled = True
+#         product.product.stock += product.quantity
+#         product.save()
+#         product.product.save()
+
+#     messages.success(request, 'Your order has been canceled.')
+#     return redirect('myorders')
+
 @login_required
 @regular_user_required
 def cancel_order(request, id):
     order = get_object_or_404(Order, id=id)
-    order_product = OrderProduct.objects.filter(order=order)
-    
+    order_products = OrderProduct.objects.filter(order=order)
     
     if order.user != request.user:
         return redirect('home')
     
+    # Update order status to 'CANCELLED'
     order.status = 'CANCELLED'
     order.is_cancelled = True
     order.save()
     
-    for product in order_product:
-        product.is_cancelled = True
-        product.product.stock += product.quantity
-        product.save()
-        product.product.save()
-
+    # Update order products
+    for order_product in order_products:
+        order_product.is_cancelled = True
+        order_product.product.stock += order_product.quantity
+        order_product.save()
+        order_product.product.save()
+    
+    # Retrieve payment information for the order
+    
+    # Check if the payment method is a debit card and credit the wallet
+    if order.payment_method.lower() == 'debit_card':
+        try:
+            wal = wallet.objects.get(user=order.user)
+        except wallet.DoesNotExist:
+            wal= wallet(user=order.user, amount=0)
+        
+        wal.amount += order.order_total
+        wal.save()
+    
     messages.success(request, 'Your order has been canceled.')
     return redirect('myorders')
+
+def request_return(request, id):
+    order = get_object_or_404(Order, id=id)
+    if request.method == 'POST':
+       reason = request.POST.get('reason')
+        # Update order status to 'RETURN' and save the return note
+       order.status = 'RETURN_REQUESTED'
+       order.return_note = reason
+       order.save()
+       messages.success(request, 'Your return request has been submitted successfully.')
+       return redirect('myorders')  # Redirect to an appropriate view after processing
+
+    return render(request, 'user/request_return.html')
+   
+
 
 @login_required
 @regular_user_required
@@ -168,3 +232,4 @@ def validate_password_complexity(password):
         return True
     else:
         return False
+ 

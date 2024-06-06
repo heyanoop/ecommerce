@@ -4,6 +4,7 @@ from categories.models import category
 from django.db.models import Q
 from django.core.paginator import Paginator
 
+
 def store(request, category_slug=None):
     categories = None
     products = None
@@ -20,6 +21,7 @@ def store(request, category_slug=None):
         products = products.order_by('product_name')
     elif sort_by == 'price':
         products = products.order_by('price')
+        
 
     # Retrieve images related to the filtered products
     images = ProductImage.objects.filter(product__in=products)

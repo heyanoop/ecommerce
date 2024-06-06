@@ -119,7 +119,7 @@
                     <a href="{{ product.get_url }}" class="title">{{ product.product_name }}</a>
                     <div class="price-wrap mt-2">
                         <span class="price">{{ product.price }}</span>
-                        <del class="price-old">$1980</del>
+                        <del class="price-old">₹{{ single_product.old_price }}</del>
                     </div> <!-- price-wrap.// -->
                 </div>
                 {% if product.stock <= 0 %}

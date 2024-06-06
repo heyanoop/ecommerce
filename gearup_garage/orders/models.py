@@ -21,7 +21,11 @@ class Order(models.Model):
         ('SHIPPED', 'shipped'),
         ('DELIVERED', 'Delivered'),
         ('CANCELLED', 'cancelled'),
-        ('RETURN', 'return')
+        ('RETURN_REQUESTED', 'return_requested'),
+        ('RETURN_ACCEPTED', 'return_accepted'),
+        ('RETURN_REJECTED', 'return_rejected'),
+        ('RETURNED', 'returned')
+        
                     
     )
     user = models.ForeignKey(account, on_delete=models.SET_NULL, null=True)
@@ -54,6 +58,7 @@ class Order(models.Model):
     razorpay_order_id = models.CharField(max_length=200, null=True, blank=True)
     razorpay_payment_id = models.CharField(max_length=200, null=True, blank=True)
     razorpay_signature = models.CharField(max_length=200, null=True, blank=True)
+    return_note =  models.CharField(max_length=250, null=True, blank=True)
     
     def __str__(self):
         return self.first_name

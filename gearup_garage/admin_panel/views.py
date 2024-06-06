@@ -14,6 +14,17 @@ from coupon.models import Coupon
 from datetime import datetime
 import pytz
 from offer_management.models import category_offer, product_offer
+from user_dashboard.models import wallet
+from django.utils import timezone
+import calendar
+import datetime
+from django.db.models import Count, Sum
+from django.db.models.functions import ExtractYear, ExtractMonth, ExtractWeek, ExtractDay
+from calendar import month_abbr, day_abbr
+from django.db.models import Case, When
+from django.db.models import Value, CharField
+from datetime import datetime, timedelta
+
 
 def admin_required(view_func):
     def _wrapped_view_func(request, *args, **kwargs):
@@ -29,14 +40,80 @@ def admin_required(view_func):
 def admin_login(request):
     return render(request, 'myadmin/accounts/login.html')
 
+
+
+
 @login_required
 @never_cache
 @admin_required
 def admin_dashboard(request):
-    return render(request, 'myadmin/home/index.html')
+    
+    total_order_total = Order.objects.filter(status__in=['DELIVERED', 'RETURN_REJECTED']).aggregate(total_order_total=Sum('order_total'))['total_order_total'] or 0
+    delivered_count = Order.objects.filter(status='DELIVERED').count()
+    return_rejected_count = Order.objects.filter(status='RETURN_REJECTED').count()
+    total_orders = delivered_count + return_rejected_count
+    returned_count = Order.objects.filter(status='RETURNED').count()
+    total_products_count = product.objects.count()
+    
+    top_selling_products = product.objects.filter(
+    orderproduct__order__status__in=['DELIVERED', 'RETURN_REJECTED']
+    ).annotate(
+        total_orders=Count('orderproduct')
+    ).order_by('-total_orders')[:5]
+
+    # Get top selling categories
+    top_selling_categories = category.objects.filter(
+        product__orderproduct__order__status__in=['DELIVERED', 'RETURN_REJECTED']
+    ).annotate(
+        total_orders=Count('product__orderproduct')
+    ).order_by('-total_orders')[:5]
+
+     
+    combined_sales_data_yearly = list(Order.objects.filter(
+        status__in=['DELIVERED', 'RETURN_REJECTED']
+    ).annotate(year=ExtractYear('created_at'), month=ExtractMonth('created_at')).values('year', 'month').annotate(
+        total_orders=Count('id')
+    ).order_by('year', 'month'))
+
+    month_names = [month_abbr[month_num] for month_num in range(1, 13)]
+    combined_sales_data_yearly = [{'month_name': month_name, 'total_orders': next((data['total_orders'] for data in combined_sales_data_yearly if data['month'] == month_num), 0)} for month_num, month_name in enumerate(month_names, start=1)]
+
+    combined_sales_data_monthly = list(Order.objects.filter(
+        status__in=['DELIVERED', 'RETURN_REJECTED']
+    ).annotate(year=ExtractYear('created_at'), day=ExtractDay('created_at')).values('year', 'day').annotate(total_orders=Count('id')).order_by('year', 'day'))
+
+    day_numbers = list(range(1, 32))
+    combined_sales_data_monthly = [{'day_num': day_num, 'total_orders': next((data['total_orders'] for data in combined_sales_data_monthly if data['day'] == day_num), 0)} for day_num in day_numbers]
+
+    combined_sales_data_weekly = list(Order.objects.filter(
+        status__in=['DELIVERED', 'RETURN_REJECTED'],
+        created_at__gte=datetime.now() - timedelta(days=7)
+    ).annotate(day=ExtractDay('created_at')).values('day').annotate(
+        total_orders=Count('id'),
+        day_name=Case(
+            *[When(day=day_num, then=Value(day_abbr[day_num - 1])) for day_num in range(1, 8)],
+            output_field=CharField()
+        )
+    ).order_by('day'))
+
+    context = {
+        'combined_sales_data_yearly': combined_sales_data_yearly,
+        'combined_sales_data_monthly': combined_sales_data_monthly,
+        'combined_sales_data_weekly': combined_sales_data_weekly,
+        'month_names': month_names,
+        'day_numbers': day_numbers,
+        'day_names': [day_abbr[day_num - 1] for day_num in range(1, 8)],
+        'total_products': total_products_count, 
+        'returned_count': returned_count, 
+        'total_orders': total_orders,
+        'total_sales': total_order_total,
+        'top_selling_products': top_selling_products,
+        'top_selling_categories': top_selling_categories,
+    }
+    return render(request, 'myadmin/home/index.html', context)
+
 
 @login_required
-@never_cache
 @admin_required
 def user_list(request):
     user_data = account.objects.all()
@@ -578,3 +655,36 @@ def delete_product_offer(request, offer_id):
         messages.error(request, 'Error deleting product offer: ' + str(e))
 
     return redirect('product_offer')
+
+
+def approve_return(request, id):
+    order = get_object_or_404(Order, id=id)
+    order.status = 'RETURN_ACCEPTED'
+    order.save()
+    return redirect('order_details',order_id=id)
+
+def reject_return(request, id):
+    order = get_object_or_404(Order, id=id)
+    order.status = 'RETURN_REJECTED'
+    order.save()
+    return redirect('order_details',order_id=id)
+
+def init_refund(request, id):
+    order = get_object_or_404(Order, id=id)
+    order_products = OrderProduct.objects.filter(order=order)
+    order.status = 'RETURNED'
+    order.save()
+    
+    for order_product in order_products:
+        order_product.product.stock += order_product.quantity
+        order_product.save()
+        order_product.product.save()
+        
+    try:
+        wal = wallet.objects.get(user=order.user)
+    except wallet.DoesNotExist:
+            wal= wallet(user=order.user, amount=0)
+        
+    wal.amount += order.order_total
+    wal.save()
+    return redirect('order_details',order_id=id)

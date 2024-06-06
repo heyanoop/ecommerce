@@ -25,8 +25,25 @@
                     <h4 class="card-title">Order Info</h4>
                     <p><strong>User:</strong> {{ order_details.user.first_name }}</p>
                     <p><strong>Order ID:</strong> {{ order_details.id }}</p>
+                    {% if order_details.status == 'RETURN_REQUESTED' %}
+                    <div class="alert alert-primary" role="alert">
+                      Return Reason: {{order_details.return_note}}
+                    </div>
+                    <a href = "{% url "approve_return" id=order_details.id %}"><button type="button" class="btn btn-primary">Accept Return</button></a>
+                    <a href = "{% url "reject_return" id=order_details.id %}"><button type="button" class="btn btn-danger">Reject Return</button></a>
+                    {% elif order_details.status == 'RETURN_ACCEPTED'  %}
+                    <a href = "{% url "init_refund" id=order_details.id %}"><button type="button" class="btn btn-danger">Initialise Refund</button>
+                    {% elif order_details.status == 'RETURN_REJECTED' %}
+                    <div class="alert alert-primary" role="alert">
+                      RETURN_REJECTED
+                    </div>
+                    {% elif order_details.status == 'RETURNED'  %}
+                    <div class="alert alert-primary" role="alert">
+                      RETURNED
+                    </div>
+                    {% else %} 
                     <form method="POST" action="{% url 'update_order' status_id=order_details.id %}">
-                        {% csrf_token %}
+                      {% csrf_token %}
                         <div class="form-group">
                             <label for="status">Status:</label>
                             <select class="form-control" id="status" name="status">
@@ -34,14 +51,13 @@
                                 <option value="CONFIRMED" {% if order_details.status == 'CONFIRMED' %} selected {% endif %}>Confirmed</option>
                                 <option value="SHIPPED" {% if order_details.status == 'SHIPPED' %} selected {% endif %}>Shipped</option>
                                 <option value="DELIVERED" {% if order_details.status == 'DELIVERED' %} selected {% endif %}>Deliveded</option>
-                                <option value="RETURN" {% if order_details.status == 'RETURN' %} selected {% endif %}>Return</option>
                                 <option value="CANCELLED" {% if order_details.status == 'CANCELLED' %} selected {% endif %}>Cancelled</option>
-                                <!-- Add more status options as needed -->
-                            </select>
+                                </select>
                         </div>
                         <input type="hidden" name="order_id" value="{{ order_details.id }}">
-                        <button type="submit" class="btn btn-primary">Update Status</button>
+                        <button type="submit" class="btn btn-primary">Update</button>
                     </form>
+                    {% endif %}
                     <p><strong>Total Price:</strong> {{ order_details.order_total }}</p>
                     <p><strong>Final Price:</strong> {{ final_price }}</p>
                     <p><strong>Ordered Date:</strong> {{ order_details.created_at }}</p>
