@@ -3,9 +3,9 @@ from .models import Cart, Cart_items, Address
 from store.models import product
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from coupon.models import Coupon
+
 
 # Create your views here.
 def _cart_id(request):
@@ -87,8 +87,8 @@ def cartitems(request):
     }
     return render(request, 'store/cart.html', context)
 
-def remove_cart(request, product_id):
-    product_instance = product.objects.filter(id=product_id).first()  # Use .first() to get the first item or None
+def remove_cart(request, p_id):
+    product_instance = product.objects.filter(id=p_id).first()  # Use .first() to get the first item or None
     cart = Cart.objects.get(cart_id=_cart_id(request))
     cart_item = None  
     try:

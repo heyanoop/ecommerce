@@ -1,4 +1,4 @@
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404, HttpResponse
 from django.contrib import messages
 from cart.models import Cart, Cart_items
 from .models import Order, OrderProduct, Payment
@@ -8,7 +8,9 @@ from django.db.models import F
 from django.contrib.auth.decorators import login_required
 from coupon.models import Coupon
 import razorpay 
-
+from user_dashboard.models import wallet
+from django.template.loader import get_template
+from xhtml2pdf import pisa
 
 def non_admin_required(view_func):
     def wrapper(request, *args, **kwargs):
@@ -85,15 +87,25 @@ def place_order(request):
         )
         request.session['order_id'] = order.id
 
-        # Create payment
-        payment = Payment.objects.create(
-            user=request.user,
-            payment_method=payment_method,
-            amount_paid=final_price,
-            status='completed'
-        )
+        # Handle payment
+        if payment_method == 'wallet':
+            wallet_pay = wallet.objects.get(user=request.user)
+            if wallet_pay.amount < order.order_total:
+                messages.error(request, "Insufficient funds in wallet")
+                return redirect('cart')
+            else:
+                wallet_pay.amount -= order.order_total
+                wallet_pay.save()
+                payment = Payment.objects.create(
+                    user=request.user,
+                    payment_method=payment_method,
+                    amount_paid=final_price,
+                    status='completed'
+                )
+                order.payment = payment
+                order.save()
 
-        if payment_method == 'debit_card':
+        elif payment_method == 'debit_card':
             if not order.razorpay_order_id:
                 order_currency = 'INR'
                 notes = {'order-type': "basic order from the website"}
@@ -142,3 +154,27 @@ def place_order(request):
         return render(request, 'store/order_placed.html')
     else:
         return render(request, 'error.html', {'message': 'Invalid request method'})
+    
+def generate_invoice(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    order_products = OrderProduct.objects.filter(order=order)
+    
+
+    template_path = 'user/invoice.html'
+    context = {
+        'order': order,
+        'order_products': order_products
+    }
+    
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="invoice_{}.pdf"'.format(order_id)
+    
+    template = get_template(template_path)
+    html = template.render(context)
+    pisa_status = pisa.CreatePDF(
+       html, dest=response
+    )
+    
+    if pisa_status.err:
+        return HttpResponse('We had some errors <pre>' + html + '</pre>')
+    return response

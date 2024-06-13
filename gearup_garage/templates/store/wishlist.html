@@ -58,8 +58,8 @@
                                     <a href="{% url 'wishlist_to_cart' p_id=item.product.id %}" class="btn btn-primary">Add To Cart</a>
                                 </td>
                                 <td class="text-right">
-                                    <a href="{% url 'cart_remove' product_id=item.product.id %}" class="btn btn-danger">Remove</a>
-                                </td>
+                                    {% comment %} <a href="{% url 'cart_remove' product_id=item.product.id %}" class="btn btn-danger">Remove</a> {% endcomment %}
+                                </td> 
 
                             </tr>
                             {% endfor %}

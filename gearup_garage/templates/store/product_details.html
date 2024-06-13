@@ -39,7 +39,7 @@
                         <var class="price h4">₹{{ single_product.price }}.00</var>
                     {% else  %}
                         <del><var class="price h4">₹{{ single_product.old_price }}.00</var></del>
-                        <var class="price h4">₹{{single_product.price}}({{discount}}% off)</var>
+                        <var class="price h4">₹{{ single_product.price }} ({{ discount }}% off)</var>
                     {% endif %} 
                     </div> 
                     
@@ -48,12 +48,22 @@
                     <hr>
                     
                     <div class="row">
-                        
-                    </div> <!-- row.// -->
-                    
+                        <div class="item-option-select">
+                            <h6>Choose Variant</h6>
+                            <div class="btn-group btn-group-sm btn-group-toggle" data-toggle="buttons">
+                                {% for variation in variations %}
+                                <label class="btn btn-light">
+                                    <input type="radio" name="radio_color" value="{{ variation.id }}" onclick="updateStock({{ variation.id }})"> {{ variation.variation_name }}
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
                     <div class="row">
-                        
-                    </div> <!-- row.// -->
+                        <div class="col-md-6">
+                            <p><strong>Stock:</strong> <span id="product_stock">{{ single_product.stock }}</span></p>
+                        </div>
+                    </div>
                     
                     <hr>
                     <a href="{% url 'add_cart' product_id=single_product.id %}" class="btn btn-primary"> <span class="text">Add to cart</span> <i class="fas fa-shopping-cart"></i>  </a>
@@ -133,23 +143,40 @@
     transform: scale(1.5);
 }
 </style>
-
+{% comment %} <input type="hidden" id="product_listing_url" value="{% url 'get_variant_stock' variation_id= %}">
+<head>
+    <script>
+        var csrfToken = '{{ get_token }}';
+    </script>
+</head> {% endcomment %}
 <!-- Swiper JS -->
 <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+{% comment %} <script>
+    
+    function updateStock(variantId) {
+        const productListingUrl = document.getElementById("product_listing_url").value;
+        fetch(productListingUrl, {
+            method: 'GET',
+            headers: {
+                {% comment %} 'X-Requested-With': 'XMLHttpRequest', 
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json',
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    var swiper = new Swiper('.swiper-container', {
-        navigation: {
-            nextEl: '.swiper-button-next',
-            prevEl: '.swiper-button-prev',
-        },
-        pagination: {
-            el: '.swiper-pagination',
-            clickable: true,
-        },
-    });
-});
-</script>
+            },
+            
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.stock !== undefined) {
+                document.getElementById('product_stock').textContent = data.stock;
+            } else {
+                console.error('Error:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+    </script> {% endcomment %}
 
-{% endblock %}
+{% endblock content%}

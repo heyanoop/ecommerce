@@ -88,9 +88,14 @@
                       Not Active
                     {%endif%}
                   </td>
-                  <td class="budget">
-                    <a href="{% url 'delete_user' user_id=user.id %}" class="btn btn-sm btn-danger">Delete</a>
-                </td>
+                  <td>
+                    <a href="{% url 'toggle_user_activation' user.id %}">
+                        {% if user.is_active %}
+                        <button type="button" class="btn btn-danger">Block</button>
+                        {% else %}
+                        <button type="button" class="btn btn-success">Unblock</button>
+                        {% endif %}
+                    </a>
                 </tr>
                 {% endfor %}
               </tbody>

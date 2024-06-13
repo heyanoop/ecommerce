@@ -41,9 +41,13 @@
                                     <p>City: {{ address.city }}</p>
                                     <p>State: {{ address.state }}</p>
                                     <p>Pin Code: {{ address.pincode }}</p>
+                                    {% if address.status == 'DELIVERED' or address.status == 'RETURN_REJECTED' %}
+                                    <a href="{% url 'generate_invoice' order_id=address.id %}"><button type="button" class="btn btn-info">Download Invoice</button></a>
+                                    {% else %}
                                     {% if address.payment_method == 'debit_card' %}
                                     {% if address.payment_status == 'PENDING' or address.payment_status == 'Failure' %}
                                      <a href = "{% url "retry_payment" id=address.id %}"><button type="button" class="btn btn-info">Retry Payment</button></a>
+                                    {% endif %}
                                     {% endif %}
                                     {% endif %}
                                     <!-- Add more address details as needed -->

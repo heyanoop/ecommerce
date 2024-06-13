@@ -95,15 +95,23 @@
     function validateForm() {
       var firstName = document.getElementById("first_name").value;
       var lastName = document.getElementById("last_name").value;
-      var address_line_1 = 
+      var phone = document.getElementById("phone").value;
       
-      if (!isNaN(firstName)) {
-        alert("First name cannot be a number.");
+      // Check if first name contains only alphabets
+      if (!/^[A-Za-z]+$/.test(firstName)) {
+        alert("First name can only contain letters.");
         return false;
       }
       
-      if (!isNaN(lastName)) {
-        alert("Last name cannot be a number.");
+      // Check if last name contains only alphabets
+      if (!/^[A-Za-z]+$/.test(lastName)) {
+        alert("Last name can only contain letters.");
+        return false;
+      }
+      
+      // Check if phone number contains only numbers
+      if (!/^\d{10}$/.test(phone)) {
+        alert("Phone number must be 10 digits.");
         return false;
       }
       

@@ -1,9 +1,10 @@
 from django.shortcuts import render, get_object_or_404,redirect
-from .models import product, ProductImage
+from .models import product, ProductImage, Product_Variation
 from categories.models import category
 from django.db.models import Q
 from django.core.paginator import Paginator
-
+from django.http import JsonResponse
+from django.middleware.csrf import get_token
 
 def store(request, category_slug=None):
     categories = None
@@ -17,10 +18,16 @@ def store(request, category_slug=None):
     else:
         products = product.objects.filter(is_available=True)
     
-    if sort_by == 'name':
+    if sort_by == 'nameas':
         products = products.order_by('product_name')
-    elif sort_by == 'price':
+    elif sort_by == 'namedes':
+        products = products.order_by('-product_name')
+    elif sort_by == 'pricelh':
         products = products.order_by('price')
+        
+    elif sort_by == 'pricehl':
+        products = products.order_by('-price')
+    
         
 
     # Retrieve images related to the filtered products
@@ -40,6 +47,7 @@ def store(request, category_slug=None):
 
 def product_details(request, category_slug, product_slug):
     single_product = get_object_or_404(product, category__slug=category_slug, slug=product_slug)
+    variations = Product_Variation.objects.filter(item = single_product)
     
     single_product.views += 1
     single_product.save()
@@ -54,15 +62,30 @@ def product_details(request, category_slug, product_slug):
         discount = prod_offer
     
     
-    
-    
     context = {
         'single_product': single_product,
         'product_images': product_images,
-         'discount': discount
+         'discount': discount,
+         'variations': variations,
+         'get_token': get_token,
+        
+         
     }
 
     return render(request, 'store/product_details.html', context)
+
+def get_variant_stock(request, variation_id):
+    if request.method == 'GET':
+        try:
+            variant = Product_Variation.objects.get(id=variation_id)
+            return JsonResponse({'stock': variant.stock})
+        except Product_Variation.DoesNotExist:
+            return JsonResponse({'error': 'Variant not found'})
+    else:
+        return JsonResponse({'error': 'Invalid request'})
+
+
+
 
 
 def product_search(request):

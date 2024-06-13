@@ -97,8 +97,10 @@
                         Sort by
                     </button>
                     <div class="dropdown-menu" aria-labelledby="sortDropdown">
-                        <a class="dropdown-item" href="?sort_by=name{% if request.GET.keyword %}&keyword={{ request.GET.keyword }}{% endif %}">Name</a>
-                        <a class="dropdown-item" href="?sort_by=price{% if request.GET.keyword %}&keyword={{ request.GET.keyword }}{% endif %}">Price</a>
+                        <a class="dropdown-item" href="?sort_by=nameas{% if request.GET.keyword %}&keyword={{ request.GET.keyword }}{% endif %}">Name(A 2 Z)</a>
+                        <a class="dropdown-item" href="?sort_by=namedes{% if request.GET.keyword %}&keyword={{ request.GET.keyword }}{% endif %}">Name(A 2 Z)</a>
+                        <a class="dropdown-item" href="?sort_by=pricelh{% if request.GET.keyword %}&keyword={{ request.GET.keyword }}{% endif %}">Price(low to High)</a>
+                        <a class="dropdown-item" href="?sort_by=pricehl{% if request.GET.keyword %}&keyword={{ request.GET.keyword }}{% endif %}">Price(High to Low)</a>
                         <!-- Add more sorting options as needed -->
                     </div>
                 </div>
@@ -165,4 +167,4 @@
   </div> <!-- container .//  -->
   </section>
   <!-- ========================= SECTION CONTENT END// ========================= -->
- {% endblock  %}
+ {% endblock  %} 

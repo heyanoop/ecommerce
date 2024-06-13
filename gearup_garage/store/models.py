@@ -8,7 +8,7 @@ class product(models.Model):
     slug = models.SlugField(max_length=200, unique=True)
     description = models.TextField(max_length=500, blank=True)
     price = models.IntegerField()
-    stock = models.IntegerField()
+    stock = models.IntegerField(blank=True, null = True)
     is_available = models.BooleanField(default=True)
     category = models.ForeignKey(category, on_delete=models.CASCADE)
     created_date = models.DateTimeField(auto_now_add=True)
@@ -40,3 +40,8 @@ class ProductImage(models.Model):
 
     def __str__(self):
         return f"{self.product.product_name} Image"
+    
+class Product_Variation(models.Model):
+    variation_name = models.CharField(max_length=50)
+    item = models.ForeignKey(product, related_name='variant', on_delete=models.CASCADE)
+    stock = models.IntegerField(default=0)

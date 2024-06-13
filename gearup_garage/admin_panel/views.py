@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.contrib import messages
 from accounts.models import account
-from store.models import product
+from store.models import product, Product_Variation
 from categories.models import category
 from store.models import product, ProductImage
 from django.contrib.auth.decorators import login_required
@@ -24,6 +24,9 @@ from calendar import month_abbr, day_abbr
 from django.db.models import Case, When
 from django.db.models import Value, CharField
 from datetime import datetime, timedelta
+from django.template.loader import render_to_string
+from weasyprint import default_url_fetcher
+from weasyprint import HTML, CSS
 
 
 def admin_required(view_func):
@@ -116,7 +119,7 @@ def admin_dashboard(request):
 @login_required
 @admin_required
 def user_list(request):
-    user_data = account.objects.all()
+    user_data = account.objects.order_by('joined_date').all()
     context = {
         'user': user_data
     }
@@ -190,45 +193,53 @@ def edit_product(request, product_id):
     instance = get_object_or_404(product, id=product_id)
     category_instance = category.objects.all()
     images = ProductImage.objects.filter(product=instance)
+    existing_variants = Product_Variation.objects.filter(item=instance)
     
     if request.method == 'POST':
         product_name = request.POST.get('product_name')
         description = request.POST.get('description')
         price = request.POST.get('price')
         category_list = request.POST.get('category_dropdown')
-        stock = request.POST.get('stock')
-        
-        category_inst = get_object_or_404(category, id=category_list)
+    
 
+        category_inst = get_object_or_404(category, id=category_list)
         # Update the instance with the new data
         instance.product_name = product_name
         instance.description = description
         instance.price = price
         instance.category = category_inst
-        instance.stock = stock
         
-        prod_images = [request.FILES.get('image1'), request.FILES.get('image2'), request.FILES.get('image3')]
         
-        if all(prod_images) and len(prod_images) == 3:
-            Prod_oldImages = ProductImage.objects.filter(product=instance)
-            Prod_oldImages.delete()
-            for image in prod_images:
-                if image:
-                    ProductImage.objects.create(product=instance, image=image)
-            instance.save()
-            messages.success(request, "Product updated successfully")
-        else:
-            messages.error(request, "3 images required")
-            return redirect("edit_product", product_id=instance.id)
+        variant_names = request.POST.getlist('variants[]')
+        variant_stocks = request.POST.getlist('variant_stocks[]')
+        
+        variants = Product_Variation.objects.filter(item=instance)  # Fetching variants
+        
+        for i, variant_name in enumerate(variant_names):
+            variant_stock = variant_stocks[i]
+            variant = variants[i]
+            variant.variation_name = variant_name
+            variant.stock = variant_stock
+            variant.save()
+        
+        for i in range(len(images)):
+            image_field = 'image{}'.format(i+1)
+            new_image = request.FILES.get(image_field)
+            if new_image:
+                images[i].image = new_image
+                images[i].save()
+
+        instance.save()
+        messages.success(request, "Product updated successfully")
         return redirect('edit_product', product_id=instance.id)
 
     context = {
         'instance': instance,
         'category_instance': category_instance,
         'images': images,
+        'existing_variants' : existing_variants
     }
     return render(request, 'myadmin/home/edit_product.html', context)
-
 
 @login_required
 @never_cache
@@ -260,7 +271,6 @@ def add_product(request):
     if request.method == 'POST':
         product_name = request.POST.get('product_name')
         price = request.POST.get('price')
-        stock = request.POST.get('stock')
         description = request.POST.get('description')
         category_id = request.POST.get('category_dropdown')
         category_inst = get_object_or_404(category, id=category_id)
@@ -278,7 +288,7 @@ def add_product(request):
 
         # Handle multiple image uploads
         prod_images = [request.FILES.get('image1'), request.FILES.get('image2'), request.FILES.get('image3')]
-        
+
         if all(prod_images) and len(prod_images) == 3:
             for image in prod_images:
                 if image:
@@ -289,13 +299,25 @@ def add_product(request):
             messages.error(request, "3 images are required")
             return redirect('add_product')
 
+        # Save variations and their stocks
+        variations = request.POST.getlist('variants[]')
+        variant_stocks = request.POST.getlist('variant_stocks[]')
+
+        if len(variations) != len(variant_stocks):
+            product_instance.delete()
+            messages.error(request, "Number of variations and stocks do not match")
+            return redirect('add_product')
+
+        for variation_group in zip(variations, variant_stocks):
+            variation_name, stock = variation_group
+            Product_Variation.objects.create(variation_name=variation_name, item=product_instance, stock=int(stock))
+
         return redirect('add_product')
 
     context = {
         'category_instance': category_instance,
     }
     return render(request, 'myadmin/home/add_product.html', context)
-
 
 
 @login_required
@@ -393,13 +415,11 @@ def orders(request):
     return render(request,'myadmin/home/orders.html', context)
 
 
-def delete_user(request, user_id):
-    user_instance = get_object_or_404(account, id = user_id)
-    user_instance.delete()
-    context = {
-        'user_instance': user_instance
-    }
-    return render(request, 'myadmin/home/delete_user.html', context)
+def toggle_user_activation(request, user_id):
+    user_instance = get_object_or_404(account, id=user_id)
+    user_instance.is_active = not user_instance.is_active
+    user_instance.save()
+    return redirect('user_list')
 
 def order_details(request, order_id):
     order_details = Order.objects.get(id=order_id)
@@ -487,7 +507,7 @@ def toggle_coupon_active(request, coupon_id):
 
 @login_required
 def sales_report(request):
-    orders = Order.objects.filter(status = 'DELIVERED')
+    orders = Order.objects.filter(status='DELIVERED')
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
 
@@ -501,6 +521,29 @@ def sales_report(request):
         'start_date': start_date,
         'end_date': end_date,
     }
+
+    if request.GET.get('generate_pdf'):
+        table_html = render_to_string('myadmin/home/sales_report_pdf.html', context)
+        
+        # Define inline CSS for the table
+        inline_css = CSS(string='''
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            th, td {
+                padding: 10px;
+                text-align: left;
+            }
+            th {
+                background-color: #f8f9fe;
+            }
+        ''')
+
+        pdf = HTML(string=table_html).write_pdf(stylesheets=[inline_css])
+        response = HttpResponse(pdf, content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="sales_report.pdf"'
+        return response
 
     return render(request, 'myadmin/home/sales_report.html', context)
 
@@ -527,47 +570,66 @@ def add_product_offer(request):
         valid_from = request.POST.get('date_from')
         valid_until = request.POST.get('expiry_date')
         discount = request.POST.get('discount')
-        
+
         valid_from = datetime.strptime(valid_from, '%Y-%m-%d').replace(tzinfo=pytz.UTC)
         valid_until = datetime.strptime(valid_until, '%Y-%m-%d').replace(tzinfo=pytz.UTC)
 
         try:
             selected_product = product.objects.get(id=product_id)
-            
+
             # Check if the product is part of any active category offer
             active_category_offers = category_offer.objects.filter(
                 category=selected_product.category,
                 valid_from__lte=valid_until,
                 valid_until__gte=valid_from
             )
+
             if active_category_offers.exists():
-                messages.error(request, 'This product is part of an active category offer.')
+                # Remove the existing category offer
+                active_category_offer = active_category_offers.first()
+                active_category_offer.delete()
+
+                # Create product offer
+                product_off = product_offer.objects.create(
+                    product=selected_product,
+                    valid_from=valid_from,
+                    valid_until=valid_until,
+                    discount=discount
+                )
+                product_off.save()
+
+                # Update product price and old price
+                selected_product.old_price = selected_product.price
+                selected_product.price = selected_product.price - (selected_product.price * (int(discount) / 100))
+                selected_product.save()
+
+                messages.success(request, 'Existing category offer removed, and new product offer created with updated product price.')
                 return redirect('add_product_offer')
-            
-            # Create product offer
-            product_off = product_offer.objects.create(
-                product=selected_product,
-                valid_from=valid_from,
-                valid_until=valid_until,
-                discount=discount
-            )
-            product_off.save()
+            else:
+                # Create product offer
+                product_off = product_offer.objects.create(
+                    product=selected_product,
+                    valid_from=valid_from,
+                    valid_until=valid_until,
+                    discount=discount
+                )
+                product_off.save()
 
-            # Update product price and old price
-            selected_product.old_price = selected_product.price
-            selected_product.price = selected_product.price - (selected_product.price * (int(discount) / 100))
-            selected_product.save()
+                # Update product price and old price
+                selected_product.old_price = selected_product.price
+                selected_product.price = selected_product.price - (selected_product.price * (int(discount) / 100))
+                selected_product.save()
 
-            messages.success(request, 'Product offer added successfully and product price updated.')
-            return redirect('add_product_offer')
+                messages.success(request, 'Product offer added successfully and product price updated.')
+                return redirect('add_product_offer')
         except Exception as e:
             messages.error(request, 'Error adding product offer: ' + str(e))
 
     context = {
         'product_list': product_list
     }
-    
     return render(request, 'myadmin/home/add_product_offer.html', context)
+
 
 def add_category_offer(request):
     category_list = category.objects.all()

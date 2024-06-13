@@ -17,7 +17,9 @@ urlpatterns = [
     path('delete_product/<int:product_id>/', views.delete_product, name='delete_product'),
     path('orders/', views.orders, name = 'orders'),
     path('order_details/<int:order_id>/',views.order_details, name = 'order_details'),
-    path('delete_user/<int:user_id>/', views.delete_user, name = 'delete_user'),
+    # path('deactivate_user/<int:user_id>/', views.deactivate_user, name = 'deactivate_user'),
+    # path('activate_user/<int:user_id>/', views.activate_user, name = 'activate_user'),
+    path('toggle_user/<int:user_id>/', views.toggle_user_activation, name='toggle_user_activation'),
     path('update_status/<int:status_id>', views.update_order_status, name = 'update_order'),
     path('coupon/', views.coupon_manager, name = 'coupon'),
     path('add_coupon', views.add_coupon, name = 'add_coupon'),
@@ -31,7 +33,6 @@ urlpatterns = [
     path('delete_product_offer/<int:offer_id>/', views.delete_product_offer, name='delete_product_offer'),
     path('approve_return/<int:id>/',views.approve_return, name = 'approve_return' ),
     path('reject_return/<int:id>/',views.reject_return, name = 'reject_return'),
-    path('init_refund/<int:id>/',views.init_refund, name = 'init_refund' )
-     
+    path('init_refund/<int:id>/',views.init_refund, name = 'init_refund' )    
     
 ]
