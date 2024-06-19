@@ -21,20 +21,23 @@ def regular_user_required(view_func):
 @regular_user_required
 def dashboard(request):
     user = request.user
+  
     try:
         wal = wallet.objects.get(user=user)
     except wallet.DoesNotExist:
             wal= wallet(user=user, amount=0)
     print(wal.amount)
     context = {
-        'wallet_bal': wal.amount 
+        'wallet_bal': wal.amount,
+        
     }
     return render(request, 'user/dashboard.html', context)
 
 @login_required
 @regular_user_required
 def address_management(request):
-    addresses = Address.objects.all()
+    user = request.user
+    addresses = Address.objects.filter(user=user)
     context = {
         'addresses': addresses,
         

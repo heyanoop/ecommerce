@@ -24,11 +24,11 @@
           <td style="width: 33%; line-height: 25px;">
             <label>From</label><br />
             <label style="font-weight: bold; font-size: 20px;">{{ order.business_name }}</label><br />
-            {{ order.address_line_1 }} <br />
-            {% if order.address_line_2 %}
-            {{ order.address_line_2 }} <br />
-            {% endif %}
-            {{ order.city }}, {{ order.state }} - {{ order.pincode }}
+            Gearup Garage <br />
+            Kundannur
+            Maradu<br />
+           
+            Kochi, Kerala - India
           </td>
           <td style="width: 33%; line-height: 25px;">
             <label>To</label><br />
@@ -59,11 +59,12 @@
             Description
           </th>
           <th>
-            Amount
+            price per piece
           </th>
           <th>
             Quantity
           </th>
+       
           
          
         </tr>
@@ -86,10 +87,10 @@
         <tr style="width: 100%;">
           <td style="width: 50%;">
             <div>
-              Notes:
+           
             </div>
             <div>
-              More Information
+              
             </div>
           </td>
           <td
@@ -107,7 +108,7 @@
                 text-transform: uppercase;
                 margin: auto;
               "
-              >{{order.order_total}}</label
+              >Order Total - {{order.order_total}}</label
             >
           </td>
         </tr>

@@ -14,9 +14,9 @@ def store(request, category_slug=None):
     
     if category_slug:
         categories = get_object_or_404(category, slug=category_slug)
-        products = product.objects.filter(category=categories, is_available=True)
+        products = product.objects.filter(category=categories, is_active=True)
     else:
-        products = product.objects.filter(is_available=True)
+        products = product.objects.filter(is_active=True)
     
     if sort_by == 'nameas':
         products = products.order_by('product_name')
@@ -92,7 +92,7 @@ def product_search(request):
     keyword = request.GET.get('keyword', '')
     sort_by = request.GET.get('sort_by')
 
-    all_products = product.objects.all()
+    all_products = product.objects.filter(is_active=True)
 
     if keyword:
         all_products = all_products.filter(Q(description__icontains=keyword) | Q(product_name__icontains=keyword))
@@ -120,7 +120,7 @@ def price_range(request):
         max_price = request.GET.get('max_price')
         sort_by = request.GET.get('sort_by')
         
-        filtered_products = product.objects.filter(price__gte=min_price, price__lte=max_price, is_available=True)
+        filtered_products = product.objects.filter(price__gte=min_price, price__lte=max_price, is_active=True)
         
         if sort_by == 'name':
             filtered_products = filtered_products.order_by('product_name')

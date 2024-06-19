@@ -36,6 +36,7 @@ def place_order(request):
         cart = Cart.objects.get(cart_id=_cart_id(request))
         cart_items = Cart_items.objects.filter(cart=cart)
         
+        
         coupon_code = request.session.get('coupon_code')
         original_price = request.session.get('original_price')
         tax = original_price * 0.2
@@ -89,7 +90,12 @@ def place_order(request):
 
         # Handle payment
         if payment_method == 'wallet':
-            wallet_pay = wallet.objects.get(user=request.user)
+            try:
+                wallet_pay = wallet.objects.get(user=request.user)
+            except wallet.DoesNotExist:
+            # Create a new wallet with a default balance of zero
+                wallet_pay = wallet.objects.create(user=request.user, amount=0)
+
             if wallet_pay.amount < order.order_total:
                 messages.error(request, "Insufficient funds in wallet")
                 return redirect('cart')

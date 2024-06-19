@@ -12,7 +12,7 @@
                         <h4 class="card-title mb-4">Billing Address</h4>
                         <button type="button" class="btn btn-success" data-toggle="collapse" data-target="#addAddressForm">Add New Address</button>
                         <div id="addAddressForm" class="collapse mt-3">
-                            <form name="addressForm" action="{% url 'add_address' %}" method="POST">
+                            <form name="addressForm" action="{% url 'add_address' %}" method="POST" onsubmit="return validateForm()">
                                 {% csrf_token %}
                                 <!-- Address form fields -->
                                 <div class="form-row">
@@ -89,7 +89,7 @@
                                     </div>
                                 </div>
                                 <!-- Add other form rows as needed -->
-                                <button type="submit" class="btn btn-primary mt-3" onclick="return validateForm()">Add Address</button>
+                                <button type="submit" class="btn btn-primary mt-3">Add Address</button>
                             </form>
                         </div>
                         <!-- Existing addresses -->
@@ -97,26 +97,30 @@
                         <form action="{% url 'place_order' %}" method="POST">
                             {% csrf_token %}
                             {% for address in addresses %}
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="radio" name="address" id="address{{ address.id }}" value="{{ address.id }}" required>
-                                <label class="form-check-label" for="address{{ address.id }}">
-                                    {{ address.first_name }} {{ address.last_name }}, 
-                                    <!-- Display address details -->
-                                </label>
-                            </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" name="address" id="address{{ address.id }}" value="{{ address.id }}" {% if forloop.counter == 1 %}checked{% endif %} required>
+                                    <label class="form-check-label" for="address{{ address.id }}">
+                                        {{ address.first_name }} {{ address.last_name }},
+                                        {{ address.address_line_1 }}, {{ address.address_line_2 }},
+                                        {{ address.city }}, {{ address.state }},
+                                        {{ address.pincode }}, {{ address.country }}
+                                    </label>
+                                </div>
                             {% endfor %}
                             <!-- Payment method dropdown -->
                             <div class="form-group">
                                 <label for="payment_method">Payment Method</label>
                                 <select name="payment_method" id="payment_method" class="form-control" required>
                                     <option value="">Select Payment Method</option>
+                                    {% if final_price < 1000 %}
                                     <option value="cash on Delivery">Cash On Delivery</option>
-                                    <option value="debit_card">Payment Gateway</option>
+                                    {% endif %}
+                                    <option value="debit_card">Razor Pay</option>
                                     <option value="wallet">Wallet</option>
                                 </select>
                             </div>
                             <!-- Place order button -->
-                            <button type="submit" class="btn btn-primary btn-block" onclick="return validateForm()">Place Order</button>
+                            <button type="submit" class="btn btn-primary btn-block">Place Order</button>
                         </form>
                         {% endif %}
                     </div>
@@ -143,136 +147,73 @@
     </div>
 </section>
 
-{% endblock  %}
+{% endblock %}
 
 <script>
     function validateForm() {
         // Retrieve form fields and error message elements
-        var firstName = document.getElementById("first_name").value;
-        var lastName = document.getElementById("last_name").value;
-        var email = document.getElementById("email").value;
-        var phone = document.getElementById("phone").value;
-        var addressLine1 = document.getElementById("address_line_1").value;
-        var addressLine2 = document.getElementById("address_line_2").value;
-        var pincode = document.getElementById("pincode").value;
-        var city = document.getElementById("city").value;
-        var state = document.getElementById("state").value;
-        var country = document.getElementById("country").value;
-        var addressType = document.getElementById("address_type").value;
+        var firstName = document.getElementById("first_name").value.trim();
+        var lastName = document.getElementById("last_name").value.trim();
+        var email = document.getElementById("email").value.trim();
+        var phone = document.getElementById("phone").value.trim();
+        var addressLine1 = document.getElementById("address_line_1").value.trim();
+        var addressLine2 = document.getElementById("address_line_2").value.trim();
+        var pincode = document.getElementById("pincode").value.trim();
+        var city = document.getElementById("city").value.trim();
+        var state = document.getElementById("state").value.trim();
+        var country = document.getElementById("country").value.trim();
+        var addressType = document.getElementById("address_type").value.trim();
     
         var isValid = true;
     
         // Clear previous error messages
-        var firstNameError = document.getElementById("first_name_error");
-        if (firstNameError) {
-            firstNameError.textContent = "";
-        }
-        var lastNameError = document.getElementById("last_name_error");
-        if (lastNameError) {
-            lastNameError.textContent = "";
-        }
-        var emailError = document.getElementById("email_error");
-        if (emailError) {
-            emailError.textContent = "";
-        }
-        var phoneError = document.getElementById("phone_error");
-        if (phoneError) {
-            phoneError.textContent = "";
-        }
-        var addressLine1Error = document.getElementById("address_line_1_error");
-        if (addressLine1Error) {
-            addressLine1Error.textContent = "";
-        }
-        var addressLine2Error = document.getElementById("address_line_2_error");
-        if (addressLine2Error) {
-            addressLine2Error.textContent = "";
-        }
-        var pincodeError = document.getElementById("pincode_error");
-        if (pincodeError) {
-            pincodeError.textContent = "";
-        }
-        var cityError = document.getElementById("city_error");
-        if (cityError) {
-            cityError.textContent = "";
-        }
-        var stateError = document.getElementById("state_error");
-        if (stateError) {
-            stateError.textContent = "";
-        }
-        var countryError = document.getElementById("country_error");
-        if (countryError) {
-            countryError.textContent = "";
-        }
-        var addressTypeError = document.getElementById("address_type_error");
-        if (addressTypeError) {
-            addressTypeError.textContent = "";
-        }
+        document.querySelectorAll('.text-danger').forEach(function(errorElement) {
+            errorElement.textContent = "";
+        });
     
         // Perform validation checks and display error messages
-        if (firstName == "") {
-            if (firstNameError) {
-                firstNameError.textContent = "First Name is required";
-            }
+        if (firstName === "") {
+            document.getElementById("first_name_error").textContent = "First Name is required";
             isValid = false;
         }
-        if (lastName == "") {
-            if (lastNameError) {
-                lastNameError.textContent = "Last Name is required";
-            }
+        if (lastName === "") {
+            document.getElementById("last_name_error").textContent = "Last Name is required";
             isValid = false;
         }
-        if (email == "") {
-            if (emailError) {
-                emailError.textContent = "Email is required";
-            }
+        if (email === "") {
+            document.getElementById("email_error").textContent = "Email is required";
             isValid = false;
         }
-        if (phone == "") {
-            if (phoneError) {
-                phoneError.textContent = "Phone is required";
-            }
+        if (phone === "") {
+            document.getElementById("phone_error").textContent = "Phone is required";
             isValid = false;
         }
-        if (addressLine1 == "") {
-            if (addressLine1Error) {
-                addressLine1Error.textContent = "Address Line 1 is required";
-            }
+        if (addressLine1 === "") {
+            document.getElementById("address_line_1_error").textContent = "Address Line 1 is required";
             isValid = false;
         }
-        if (addressLine2 == "") {
-            if (addressLine2Error) {
-                addressLine2Error.textContent = "Address Line 2 is required";
-            }
+        if (addressLine2 === "") {
+            document.getElementById("address_line_2_error").textContent = "Address Line 2 is required";
             isValid = false;
         }
-        if (pincode == "") {
-            if (pincodeError) {
-                pincodeError.textContent = "Pincode is required";
-            }
+        if (pincode === "") {
+            document.getElementById("pincode_error").textContent = "Pincode is required";
             isValid = false;
         }
-        if (city == "") {
-            if (cityError) {
-                cityError.textContent = "City is required";
-            }
+        if (city === "") {
+            document.getElementById("city_error").textContent = "City is required";
             isValid = false;
         }
-        if (state == "") {
-            if (stateError) {
-                stateError.textContent = "State is required";
-            }
+        if (state === "") {
+            document.getElementById("state_error").textContent = "State is required";
             isValid = false;
         }
-        if (country == "") {
-            if (countryError) {
-                countryError.textContent = "Country is required";
-            }
+        if (country === "") {
+            document.getElementById("country_error").textContent = "Country is required";
             isValid = false;
         }
-        if (addressType == "") {
-            if (addressTypeError) {
-                addressTypeError.textContent = "Address Type is required";
-            }
+        if (addressType === "") {
+            document.getElementById("address_type_error").textContent = "Address Type is required";
             isValid = false;
         }
     

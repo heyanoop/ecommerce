@@ -15,6 +15,7 @@ class product(models.Model):
     modified_date = models.DateTimeField(auto_now=True)
     views = models.IntegerField(default=0)
     old_price = models.IntegerField(null = True, blank = True)
+    is_active = models.BooleanField(default=True)
     
      
     def get_product_offer(self):

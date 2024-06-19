@@ -25,7 +25,7 @@
                                 <div>
                                     <p>Order ID: {{ address.id }}</p>
                                     <p>Billing Name: {{ address.first_name }} {{ address.last_name }}</p>
-                                    <p>Subtotal: {{ address.original_price  }}</p>
+                                    <p>Subtotal: {{ address.original_price  }}</p>  
                                     {% if coupon_discount != 0 %}
                                     <p>Coupon discount: -{{ address.discount_price }}</p>
                                     {% endif %}

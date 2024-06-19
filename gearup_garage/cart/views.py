@@ -57,7 +57,7 @@ def cartitems(request):
     
     cart_items = Cart_items.objects.filter(cart=cart).order_by('-added_time')
     total_price = sum(item.product.price * item.quantity for item in cart_items)
-    tax = (total_price * 0.2)
+    tax = round((total_price * 0.2),2)
     
     
     discount = 0
@@ -67,13 +67,13 @@ def cartitems(request):
     if coupon_code:
        try:
             coupon = Coupon.objects.get(code=coupon_code, is_active=True)
-            discount = total_price * (round(coupon.discount) / 100)
+            discount = round(total_price * (round(coupon.discount) / 100), 2)
             request.session['coupon_discount'] = discount
        except Coupon.DoesNotExist:
             messages.error(request, "Invalid or expired coupon")
             request.session['coupon_code'] = None  # Remove invalid coupon
 
-    final_price = total_price + tax - discount
+    final_price = round(total_price + tax - discount, 2)
     
     context = {
         'cart_items' : cart_items,
@@ -116,11 +116,11 @@ def checkout(request):
         coupon_discount = request.session.get('coupon_discount')
         original_price = request.session.get('original_price')
         print(coupon, coupon_code, coupon_discount)
-        tax = original_price * 0.2
+        tax = round((original_price * 0.2), 2)
         final_price = original_price - coupon_discount + tax
     else:
         original_price = request.session.get('original_price')
-        tax = (original_price * 0.2)
+        tax = round((original_price * 0.2), 2)
         final_price = original_price + tax
         coupon = None
         coupon_discount= None
